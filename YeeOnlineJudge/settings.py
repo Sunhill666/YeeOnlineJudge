@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+
+    'organization.apps.OrganizationConfig',
+    'problems.apps.ProblemsConfig'
 ]
 
 MIDDLEWARE = [
@@ -118,6 +121,7 @@ USE_I18N = True
 
 USE_TZ = False
 
+AUTH_USER_MODEL = 'organization.User'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
@@ -128,3 +132,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AVATAR_URI_PREFIX = "/public/avatar"
