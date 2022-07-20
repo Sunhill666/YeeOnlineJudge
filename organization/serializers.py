@@ -1,26 +1,39 @@
-from models import User, Classes
+from rest_framework.validators import UniqueTogetherValidator
+
+from .models import User, Classes
 from rest_framework import serializers
-from django.conf import settings
+
+
+class ClassesSerialize(serializers.ModelSerializer):
+    users = serializers.StringRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = Classes
+        fields = '__all__'
+        read_only_fields = ('id', 'users')
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # id = serializers.IntegerField(read_only=True)
-    # username = serializers.CharField(max_length=10)
-    # email = serializers.CharField(max_length=30)
-    # first_name = serializers.CharField(max_length=3)
-    # last_name = serializers.CharField(max_length=2)
-    # user_id = serializers.CharField(max_length=13)
-    # is_active = serializers.BooleanField(default=True)
-    # user_role = serializers.ChoiceField(choices=User.UserRole, choicesmax_length=2)
-    # user_admin = serializers.ChoiceField(choices=User.UserAdmin, choicesmax_length=2)
-    # classes = serializers.PrimaryKeyRelatedField()
-    # solved_problems = serializers.JSONField(default=dict)
-    # avatar = serializers.CharField(default=f"{settings.AVATAR_URI_PREFIX}/default.png")
-    #
-    # commit_num = serializers.IntegerField(default=0)
-    # accept_num = serializers.IntegerField(default=0)
-    # solved_num = serializers.IntegerField(default=0)
+    user_role = serializers.ChoiceField(source="get_user_role_display", choices=User.UserRole.choices)
+    user_admin = serializers.ChoiceField(source="get_user_admin_display", choices=User.UserAdmin.choices)
+    classes = ClassesSerialize()
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
+
+    def update(self, instance, validated_data):
+        get_pwd = validated_data.get("password")
+        if get_pwd:
+            try:
+                instance.set_password(get_pwd)
+                validated_data.pop("password")
+            except:
+                pass
+        return super().update(instance, validated_data)
 
     class Meta:
         model = User
+        # exclude = ['groups', 'user_admin']
         fields = '__all__'
+        read_only_fields = ('id', 'commit_num', 'accept_num', 'solved_num')
