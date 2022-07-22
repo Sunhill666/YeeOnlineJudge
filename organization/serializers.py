@@ -14,9 +14,8 @@ class ClassesSerialize(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    user_role = serializers.ChoiceField(source="get_user_role_display", choices=User.UserRole.choices)
-    user_admin = serializers.ChoiceField(source="get_user_admin_display", choices=User.UserAdmin.choices)
-    classes = ClassesSerialize()
+    user_role = serializers.ChoiceField(choices=User.UserRole.choices)
+    user_admin = serializers.ChoiceField(choices=User.UserAdmin.choices)
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)

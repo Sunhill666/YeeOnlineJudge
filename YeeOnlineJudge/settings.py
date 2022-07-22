@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'organization.apps.OrganizationConfig',
     'problems.apps.ProblemsConfig',
     'utils.apps.UtilsConfig',
+    'contest.apps.ContestConfig'
 ]
 
 MIDDLEWARE = [
