@@ -14,7 +14,7 @@ class ProblemTagSerializers(serializers.ModelSerializer):
 class ProblemSerializers(serializers.ModelSerializer):
     difficulty = serializers.ChoiceField(choices=Problem.Difficulty.choices)
     languages = serializers.ListField(child=serializers.ChoiceField(choices=Problem.OJLanguage.choices))
-    tags = serializers.StringRelatedField(many=True)
+    tags = serializers.SlugRelatedField(many=True, slug_field='tag_name', queryset=ProblemTag.objects.all())
 
     class Meta:
         model = Problem
