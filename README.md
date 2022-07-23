@@ -30,7 +30,7 @@
 
     ```Shell
     source ./venv/Scripts/active
-    ````
+    ```
 
     **Linux执行**
 
@@ -40,12 +40,15 @@
 
  6. 安装依赖
 
+    > 注意python-psycopg2版本问题，详见[此处](https://blog.csdn.net/z120379372/article/details/78899175)
+
     ```Shell
+    apt install libpq-dev python-psycopg2
     pip install -r requirements.txt
     ```
 
  7. 启动服务
 
-    ```Shell
-    python manage.py runserver 127.0.0.1:8000
-    ```
+   ```Shell
+   python manage.py runserver 127.0.0.1:8000
+   ```
