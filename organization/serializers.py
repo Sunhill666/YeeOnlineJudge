@@ -1,7 +1,5 @@
-from rest_framework.validators import UniqueTogetherValidator
-
-from .models import User, Classes
 from rest_framework import serializers
+from .models import User, Classes
 
 
 class ClassesSerialize(serializers.ModelSerializer):
@@ -33,6 +31,5 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # exclude = ['groups', 'user_admin']
         fields = '__all__'
         read_only_fields = ('id', 'commit_num', 'accept_num', 'solved_num')

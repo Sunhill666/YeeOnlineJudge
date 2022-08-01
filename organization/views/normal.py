@@ -1,5 +1,4 @@
 from rest_framework import viewsets
-
 from organization.models import User, Classes
 from organization.serializers import UserSerializer, ClassesSerialize
 

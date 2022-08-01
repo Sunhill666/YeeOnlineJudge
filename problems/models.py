@@ -38,6 +38,7 @@ class Problem(models.Model):
     tags = models.ManyToManyField(ProblemTag, related_name='problems')
     source = models.CharField("题源", null=True, max_length=12)
     visible = models.BooleanField("是否可见", default=True)
+    test_case_id = models.TextField("测试样例ID")
 
     description = models.TextField("问题描述")
     input_description = models.TextField("输入描述")
@@ -60,3 +61,8 @@ class Problem(models.Model):
     class Meta:
         db_table = "problem"
         ordering = ['-create_time']
+
+
+class TestCase(models.Model):
+    id = models.CharField("测试用例ID", max_length=16, primary_key=True)
+    path = models.TextField("上传路径")

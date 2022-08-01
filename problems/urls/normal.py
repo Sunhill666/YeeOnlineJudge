@@ -1,5 +1,4 @@
 from rest_framework import routers
-
 from problems.views.normal import ProblemViewSet, ProblemTagViewSet
 
 router = routers.DefaultRouter()

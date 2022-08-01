@@ -1,6 +1,5 @@
 from rest_framework import serializers
-
-from problems.models import Problem, ProblemTag
+from problems.models import Problem, ProblemTag, TestCase
 
 
 class ProblemTagSerializers(serializers.ModelSerializer):
@@ -20,3 +19,10 @@ class ProblemSerializers(serializers.ModelSerializer):
         model = Problem
         fields = "__all__"
         read_only = ['commit_num', 'accept_num', 'statistics_info', 'create_by']
+
+
+class TestCaseSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = TestCase
+        fields = "__all__"
+        read_only = ['id']
