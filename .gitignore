@@ -1,0 +1,8 @@
+.idea
+**/migrations/*
+!**/migrations/__init__.py
+**/__pycache__
+venv
+upload/avatar/*
+!upload/avatar/default.jpg
+upload/test_case/*
