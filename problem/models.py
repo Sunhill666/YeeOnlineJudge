@@ -31,7 +31,7 @@ class Problem(models.Model):
         MEDIUM = 'Medium', _('medium')
         HARD = 'Hard', _('hard')
 
-    class ProblemMode(models.TextChoices):
+    class Mode(models.TextChoices):
         OI = 'OI', _('OI')
         ACM = 'ACM', _('ACM')
         FUNC = 'Func', _('Functional')
@@ -62,7 +62,7 @@ class Problem(models.Model):
     # MB
     memory_limit = models.IntegerField(_("memory limit"))
     difficulty = models.CharField(_("difficulty"), choices=Difficulty.choices, max_length=6)
-    mode = models.CharField(_("problem mode"), choices=ProblemMode.choices, max_length=4)
+    mode = models.CharField(_("problem mode"), choices=Mode.choices, max_length=4)
     test_case = models.ForeignKey(TestCase, on_delete=models.PROTECT, related_name="cases")
     '''
     In ACM and OI mode:
@@ -91,7 +91,7 @@ class Problem(models.Model):
 
     # 面向前台显示
     is_public = models.BooleanField(_("public"), default=False)
-    tags = models.ManyToManyField(ProblemTag, related_name='problem')
+    tags = models.ManyToManyField(ProblemTag, related_name='problems')
     source = models.CharField(_("problem source"), null=True, blank=True, max_length=30)
     # 面向工作人员显示
     visible = models.BooleanField(_("visible"), default=True)

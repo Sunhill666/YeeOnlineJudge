@@ -28,6 +28,7 @@ class Contest(models.Model):
     [31, 29, 32] # Problem Set ID
     '''
     ordering = models.JSONField(_("ordering of stage"))
+    mode = models.CharField(_("contest mode"), choices=Problem.Mode.choices, max_length=4)
 
     group = models.ManyToManyField(Group, related_name='con_group')
     user = models.ManyToManyField(User, related_name='con_user')
