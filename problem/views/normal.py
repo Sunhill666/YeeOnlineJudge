@@ -30,4 +30,3 @@ class ProblemTagRetrieveView(generics.RetrieveAPIView):
     queryset = ProblemTag.objects.all()
     serializer_class = NormalProblemTagSerializer
     permission_classes = [permissions.AllowAny]
-

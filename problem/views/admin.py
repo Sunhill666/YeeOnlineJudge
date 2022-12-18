@@ -1,5 +1,4 @@
-from rest_framework import generics
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, generics
 
 from organization import permissions
 from problem.models import Problem, ProblemTag, TestCase

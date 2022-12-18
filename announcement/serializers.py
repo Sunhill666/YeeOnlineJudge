@@ -13,7 +13,6 @@ class AnnouncementSerializer(serializers.ModelSerializer):
 
 
 class NormalAnnouncementDetailSerializer(AnnouncementSerializer):
-
     class Meta:
         model = Announcement
         exclude = ['visible']

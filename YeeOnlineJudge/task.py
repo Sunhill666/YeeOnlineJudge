@@ -4,9 +4,9 @@ from celery import shared_task
 from django.core.cache import cache
 from django.db.models import Q
 
-from contest.models import ContestRank, Contest
 from organization.models import UserProfile
 from submission.models import Submission
+from training.models import TrainingRank, Training
 from utils.judger import submission
 from utils.tools import get_judge_client
 
@@ -95,8 +95,8 @@ def process_statistics(token):
 def contest_rank(token, contest_id):
     submit = Submission.objects.get(pk=token)
     user = submit.commit_by
-    user_rank = ContestRank.objects.get(Q(contest_id=contest_id) & Q(user=user))
-    contest = Contest.objects.get(pk=contest_id)
+    user_rank = TrainingRank.objects.get(Q(contest_id=contest_id) & Q(user=user))
+    contest = Training.objects.get(pk=contest_id)
     score = contest.score
 
     while submit.status == Submission.Status.IQ or submit.status == Submission.Status.PROCESSING:

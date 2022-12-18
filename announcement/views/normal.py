@@ -6,7 +6,7 @@ from ..serializers import AnnouncementListSerializer, NormalAnnouncementDetailSe
 
 
 class AnnouncementListView(generics.ListAPIView):
-    queryset = Announcement.objects.filter(contest__isnull=True)
+    queryset = Announcement.objects.filter(training__isnull=True)
     serializer_class = AnnouncementListSerializer
     pagination_class = NumPagination
     permission_classes = [permissions.AllowAny]
@@ -16,6 +16,6 @@ class AnnouncementListView(generics.ListAPIView):
 
 
 class AnnouncementRetrieveView(generics.RetrieveAPIView):
-    queryset = Announcement.objects.filter(contest__isnull=True)
+    queryset = Announcement.objects.filter(training__isnull=True)
     serializer_class = NormalAnnouncementDetailSerializer
     permission_classes = [permissions.AllowAny]

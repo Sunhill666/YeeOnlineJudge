@@ -1,10 +1,9 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
-from contest.models import Contest
 from organization.models import User
 from problem.models import Problem
+from training.models import Training
 
 
 class Submission(models.Model):
@@ -26,7 +25,7 @@ class Submission(models.Model):
     language_id = models.IntegerField("提交语言ID")
     created_time = models.DateTimeField("提交时间", auto_now_add=True)
     status = models.CharField("状态", max_length=20, choices=Status.choices)
-    contest = models.ForeignKey(Contest, on_delete=models.CASCADE, null=True)
+    training = models.ForeignKey(Training, on_delete=models.CASCADE, null=True)
 
     @staticmethod
     def translate_status(status_dict):

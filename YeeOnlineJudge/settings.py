@@ -48,7 +48,7 @@ INSTALLED_APPS = [
 
     'organization.apps.OrganizationConfig',
     'problem.apps.ProblemConfig',
-    'contest.apps.ContestConfig',
+    'training.apps.TrainingConfig',
     'submission.apps.SubmissionConfig',
     'announcement.apps.AnnouncementConfig',
 ]
@@ -145,4 +145,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'upload')
 MEDIA_URL = 'media/'
 STATIC_URL = 'static/'
-

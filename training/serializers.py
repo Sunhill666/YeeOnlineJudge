@@ -3,9 +3,9 @@ from rest_framework import serializers
 
 from announcement.models import Announcement
 from announcement.serializers import NormalAnnouncementDetailSerializer
-from contest.models import Contest, ContestRank, ProblemSet
 from organization.models import Group, User
 from problem.serializers import ProblemListSerializer
+from training.models import Training, TrainingRank, ProblemSet, LearningPlan
 
 
 # 基本序列化器
@@ -21,7 +21,7 @@ class BaseProblemSetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class BaseContestSerializer(serializers.ModelSerializer):
+class BaseTrainingSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, write_only=True, required=False)
     group = serializers.StringRelatedField(many=True, required=False)
     user = serializers.StringRelatedField(many=True, required=False)
@@ -52,11 +52,12 @@ class BaseContestSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        serializer = BaseProblemSetSerializer(instance=instance.stage, many=True)
-        ann = NormalAnnouncementDetailSerializer(instance=Announcement.objects.filter(
-            contest=instance.id).order_by('-created_time'), many=True
+        serializer = ProblemListSerializer(instance=instance.problems, many=True)
+        ann = NormalAnnouncementDetailSerializer(
+            instance=Announcement.objects.filter(training=instance.id).order_by('-created_time'),
+            many=True
         )
-        ret.update(stage=serializer.data)
+        ret.update(problems=serializer.data)
         ret.update(announcement=ann.data)
         return ret
 
@@ -76,7 +77,34 @@ class BaseContestSerializer(serializers.ModelSerializer):
         return attrs
 
     class Meta:
-        model = Contest
+        model = Training
+        fields = '__all__'
+        read_only_fields = ['created_time', 'created_by']
+
+
+class BaseLearningPlanSerializer(serializers.ModelSerializer):
+    create_by = serializers.StringRelatedField()
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        serializer = BaseProblemSetSerializer(instance=instance.stage, many=True)
+        ret.update(stage=serializer.data)
+        return ret
+
+    def validate(self, attrs):
+        stage = attrs['stage']
+        order = attrs['ordering']
+        if len(stage) != len(order):
+            raise serializers.ValidationError({"detail": "stage and ordering must match"})
+        for i in stage:
+            try:
+                order.index(i.id)
+            except ValueError:
+                raise serializers.ValidationError({"detail": "stage and ordering must match"})
+        return attrs
+
+    class Meta:
+        model = LearningPlan
         fields = '__all__'
         read_only_fields = ['created_time', 'created_by']
 
@@ -86,19 +114,31 @@ class BaseContestRankSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
 
     class Meta:
-        model = ContestRank
+        model = TrainingRank
         fields = '__all__'
         read_only_fields = ['statistics']
 
 
-# 竞赛序列化器
-class NormalDetailContestSerializer(BaseContestSerializer):
+# 训练序列化器
+class NormalDetailTrainingSerializer(BaseTrainingSerializer):
     class Meta:
-        model = Contest
+        model = Training
         fields = '__all__'
 
 
-class ContestListSerializer(serializers.ModelSerializer):
+class TrainingListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Contest
-        exclude = ['description', 'ordering', 'password']
+        model = Training
+        exclude = ['description', 'password']
+
+
+class NormalDetailLearningPlanSerializer(BaseLearningPlanSerializer):
+    class Meta:
+        model = LearningPlan
+        fields = '__all__'
+
+
+class LearningPlanListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LearningPlan
+        exclude = ['description', 'ordering']

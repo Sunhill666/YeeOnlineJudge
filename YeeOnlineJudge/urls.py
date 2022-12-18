@@ -13,10 +13,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView, TokenBlacklistView
 
 from organization import views
@@ -34,8 +34,8 @@ urlpatterns = [
     path('api/sub/', include('submission.urls.normal')),
     path('api/sub/admin/', include('submission.urls.admin')),
 
-    path('api/con/', include('contest.urls.normal')),
-    path('api/con/admin/', include('contest.urls.admin')),
+    path('api/train/', include('training.urls.normal')),
+    path('api/train/admin/', include('training.urls.admin')),
 
     path('api/ann/', include('announcement.urls.normal')),
     path('api/ann/admin/', include('announcement.urls.admin')),

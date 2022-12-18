@@ -1,9 +1,6 @@
-import base64
-import os
 import random
 from zipfile import ZipFile
 
-from django.conf import settings
 from django.core.cache import cache
 
 from organization.models import User

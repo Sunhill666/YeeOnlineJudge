@@ -4,16 +4,17 @@ from rest_framework import generics, filters, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from contest.models import Contest, ContestRank, ProblemSet
-from contest.serializers import ContestListSerializer, NormalDetailContestSerializer, BaseProblemSetSerializer
 from submission.models import Submission
 from submission.serializers import SubmissionSerializers
+from training.models import Training, TrainingRank, LearningPlan
+from training.serializers import TrainingListSerializer, NormalDetailTrainingSerializer, LearningPlanListSerializer, \
+    NormalDetailLearningPlanSerializer
 from utils.pagination import NumPagination
 
 
 class ContestListView(generics.ListAPIView):
-    queryset = Contest.objects.filter(is_open=True)
-    serializer_class = ContestListSerializer
+    queryset = Training.objects.filter(is_open=True)
+    serializer_class = TrainingListSerializer
     pagination_class = NumPagination
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -22,28 +23,44 @@ class ContestListView(generics.ListAPIView):
 
 
 class ContestRetrieveView(generics.RetrieveAPIView):
-    queryset = Contest.objects.filter(is_open=True)
-    serializer_class = NormalDetailContestSerializer
+    queryset = Training.objects.filter(is_open=True)
+    serializer_class = NormalDetailTrainingSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class LearningPlanListView(generics.ListAPIView):
+    queryset = LearningPlan.objects.filter(is_open=True)
+    serializer_class = LearningPlanListSerializer
+    pagination_class = NumPagination
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title']
+    ordering_fields = ['created_time']
+
+
+class LearningPlanRetrieveView(generics.RetrieveAPIView):
+    queryset = LearningPlan.objects.filter(is_open=True)
+    serializer_class = NormalDetailLearningPlanSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
-def contest_verify(request):
+def training_verify(request):
     try:
         if not request.data.get('id'):
             return Response({"detail": "id为空"}, status=status.HTTP_400_BAD_REQUEST)
 
-        contest = Contest.objects.filter(is_open=True).get(pk=request.data.get('id'))
-    except Contest.DoesNotExist:
+        training = Training.objects.filter(is_open=True).get(pk=request.data.get('id'))
+    except Training.DoesNotExist:
         return Response({"detail": "比赛不存在"}, status=status.HTTP_404_NOT_FOUND)
 
-    if contest.password and not check_password(request.data.get('password'), contest.password):
+    if training.password and not check_password(request.data.get('password'), training.password):
         return Response({"detail": "密码错误"}, status=status.HTTP_400_BAD_REQUEST)
 
-    contest_verify_set = cache.get('contest_verify', set())
-    contest_verify_set.add(request.user.username)
-    cache.set('contest_verify', contest_verify_set, None)
+    training_verify_set = cache.get('training_verify', set())
+    training_verify_set.add(request.user.username)
+    cache.set('training_verify', training_verify_set, None)
     return Response({"detail": "ok"}, status=status.HTTP_200_OK)
 
 
@@ -78,7 +95,7 @@ class ContestRankList(generics.ListAPIView):
     ordering_fields = ['commit_num', 'accepted_num', 'score']
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(ContestRank.objects.filter(contest_id=kwargs.get('pk')).
+        queryset = self.filter_queryset(TrainingRank.objects.filter(contest_id=kwargs.get('pk')).
                                         order_by('-score', '-accepted_num', 'commit_num'))
         page = self.paginate_queryset(queryset)
         if page is not None:

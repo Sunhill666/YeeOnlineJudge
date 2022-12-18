@@ -49,7 +49,14 @@ class Problem(models.Model):
         ]
     }
     '''
-    sample = models.JSONField(_("input output sample"), null=True, blank=True)
+    sample = models.JSONField(_("input output sample"), null=True)
+    '''
+    {
+        "C++": "……",
+        "Python": "…………"
+    }
+    '''
+    template = models.JSONField(_("completion template"), null=True)
     hint = models.TextField(_("hint"), null=True, blank=True)
     '''
     {

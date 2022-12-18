@@ -16,7 +16,7 @@ class AnnouncementListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         if self.request.method == "GET":
-            return Announcement.objects.filter(contest__isnull=True)
+            return Announcement.objects.filter(training__isnull=True)
         return Announcement.objects.all()
 
     def get_serializer_class(self):

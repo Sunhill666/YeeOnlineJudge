@@ -8,11 +8,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from YeeOnlineJudge.task import process_status, contest_rank, process_statistics
-from contest.models import Contest, ContestRank
 from organization.models import UserProfile
 from problem.models import Problem
 from submission.models import Submission
 from submission.serializers import SubmissionSerializers
+from training.models import Training, TrainingRank
 from utils.judger import submission
 from utils.judger.languages import languages
 from utils.pagination import NumPagination
@@ -79,21 +79,21 @@ class SubmissionView(APIView):
         except Problem.DoesNotExist:
             return Response({"detail": "题目不存在"}, status=status.HTTP_404_NOT_FOUND)
 
-        if contest_id := request.data.get('contest', None):
+        if training_id := request.data.get('training', None):
             try:
-                contest = Contest.objects.get(pk=contest_id)
-            except Contest.DoesNotExist:
+                training = Training.objects.get(pk=training_id)
+            except Training.DoesNotExist:
                 return Response({"detail": "比赛不存在"}, status=status.HTTP_404_NOT_FOUND)
 
-            if datetime.now() > contest.end_time:
+            if datetime.now() > training.end_time:
                 return Response({"detail": "比赛已过期"}, status=status.HTTP_403_FORBIDDEN)
-            if datetime.now() < contest.start_time:
+            if datetime.now() < training.start_time:
                 return Response({"detail": "比赛未开始"}, status=status.HTTP_403_FORBIDDEN)
-            if problem.id not in [int(i) for i in contest.score.keys()]:
+            if problem.id not in [int(i) for i in training.score.keys()]:
                 return Response({"detail": "题目不存在"}, status=status.HTTP_403_FORBIDDEN)
 
             contestper = cache.get(request.user.username + '_contest', dict())
-            if not contestper.get(str(contest_id), False):
+            if not contestper.get(str(training_id), False):
                 return Response({"detail": "没有参加权限"}, status=status.HTTP_403_FORBIDDEN)
 
         # 请求不带stdin则为测试判题不保存该提交，否则保存
@@ -111,11 +111,11 @@ class SubmissionView(APIView):
         if serializer.is_valid():
             serializer.save(commit_by=request.user)
             process_status.delay(sub.token)
-            if contest_id := request.data.get('contest', None):
-                contest_rank.delay(sub.token, contest_id)
-                user_rank = ContestRank.objects.get(Q(contest_id=contest_id) & Q(user=request.user))
+            if training_id := request.data.get('training', None):
+                contest_rank.delay(sub.token, training_id)
+                user_rank = TrainingRank.objects.get(Q(training_id=training_id) & Q(user=request.user))
                 user_rank.commit_num = len(Submission.objects.filter(Q(commit_by=request.user) &
-                                                                     Q(contest_id=contest_id)))
+                                                                     Q(training_id=training_id)))
                 user_rank.save()
             else:
                 process_statistics.delay(sub.token)
