@@ -1,12 +1,31 @@
+import threading
+
 import requests
 from django.conf import settings
 
 
-class Client:
+def synchronous_lock(func):
+    def wrapper(*args, **kwargs):
+        with threading.Lock():
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
+class JudgeClient:
     authn_token = None
     authz_token = None
     endpoint = None
     session = None
+    _instance_lock = threading.Lock()
+
+    # 线程安全单例模式
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(JudgeClient, '_instance'):
+            with JudgeClient._instance_lock:
+                if not hasattr(JudgeClient, '_instance'):
+                    JudgeClient._instance = object.__new__(cls)
+        return JudgeClient._instance
 
     def __init__(self):
         self.authn_token = settings.AUTHN_TOKEN

@@ -1,5 +1,7 @@
 import base64
 
+from utils.judger.judgeclient import JudgeClient
+
 
 class Submission:
     source_code = None
@@ -66,7 +68,8 @@ class Submission:
 
         return getattr(self, item)
 
-    def load(self, client):
+    def load(self):
+        client = JudgeClient()
         headers = {"Content-Type": "application/json"}
         params = {
             "base64_encoded": "true",
@@ -78,7 +81,8 @@ class Submission:
         json = r.json()
         self.set_properties(dict(json))
 
-    def submit(self, client, wait=False):
+    def submit(self, wait=False):
+        client = JudgeClient()
         headers = {"Content-Type": "application/json"}
         params = {"base64_encoded": "true", "wait": str(wait).lower()}
         language_id = self.language_id
@@ -110,19 +114,19 @@ class Submission:
                 setattr(self, key, value)
 
 
-def get(client, submission_token):
+def get(submission_token):
     submission = Submission()
     submission.token = submission_token
-    submission.load(client)
+    submission.load()
     return submission
 
 
-def submit(client, source_code, language, stdin=None, expected_output=None, **kwargs):
+def submit(source_code, language, stdin=None, expected_output=None, **kwargs):
     submission = Submission()
     submission.set_properties(kwargs)
     submission.source_code = source_code
     submission.language_id = language
     submission.stdin = stdin
     submission.expected_output = expected_output
-    submission.submit(client, wait=kwargs.get('wait', False))
+    submission.submit(wait=kwargs.get('wait', False))
     return submission

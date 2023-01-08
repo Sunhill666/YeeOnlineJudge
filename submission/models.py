@@ -18,19 +18,18 @@ class Submission(models.Model):
         IE = 'Internal Error', _('内部错误')
         EFE = 'Exec Format Error', _('运行格式错误')
 
-    commit_by = models.ForeignKey(User, on_delete=models.CASCADE)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
-    token = models.CharField("提交token", max_length=36, primary_key=True)
-    code = models.TextField("提交的代码")
-    language_id = models.IntegerField("提交语言ID")
-    created_time = models.DateTimeField("提交时间", auto_now_add=True)
-    status = models.CharField("状态", max_length=20, choices=Status.choices)
+    token = models.JSONField(_("submission token"))
+    code = models.TextField(_("submitted code"))
+    language_id = models.IntegerField(_("submitted language"))
     training = models.ForeignKey(Training, on_delete=models.CASCADE, null=True)
+    status = models.CharField(_("submitted status"), max_length=20, choices=Status.choices)
+    created_time = models.DateTimeField(_("submitted time"), auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     @staticmethod
     def translate_status(status_dict):
-        status_id = status_dict.get('id')
-        if 6 < status_id < 13:
+        if 6 < status_dict.get('id') < 13:
             return Submission.Status.RE
         return Submission.Status(status_dict.get('description'))
 

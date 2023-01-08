@@ -13,8 +13,6 @@ import os.path
 from datetime import timedelta
 from pathlib import Path
 
-from utils.judger.client import Client
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,9 +25,11 @@ SECRET_KEY = 'django-insecure-5#z3qhjc^cad8x$k#6dkavy_(=##52_ys0it_q466+#8@#px$s
 CURRENT_ENV = os.getenv('CURRENT_ENV', 'dev')
 
 if CURRENT_ENV == 'dev':
-    from YeeOnlineJudge.dev_settings import *
+    DEBUG = True
 else:
-    from YeeOnlineJudge.prod_settings import *
+    DEBUG = False
+
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -145,3 +145,52 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'upload')
 MEDIA_URL = 'media/'
 STATIC_URL = 'static/'
+
+
+# PostgreSQL 配置
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST'),
+        'PORT': os.getenv('POSTGRES_PORT'),
+    }
+}
+
+# Redis 配置
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.getenv('REDIS_HOST'),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": os.getenv('REDIS_PASSWORD')
+        }
+    }
+}
+
+# celery 配置
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
+# 可接受的内容格式
+CELERY_ACCEPT_CONTENT = ["json"]
+# 任务序列化数据格式
+CELERY_TASK_SERIALIZER = "json"
+# 结果序列化数据格式
+CELERY_RESULT_SERIALIZER = "json"
+CELERYD_TIME_LIMIT = 60
+CELERY_TASK_TRACK_STARTED = True
+
+# 判题机认证与授权Header
+AUTHN_HEADER = os.getenv('AUTHN_HEADER')
+AUTHN_TOKEN = os.getenv('AUTHN_TOKEN')
+
+AUTHZ_HEADER = os.getenv('AUTHZ_HEADER')
+AUTHZ_TOKEN = os.getenv('AUTHZ_TOKEN')
+
+# 判题机
+JUDGE_HOST = os.getenv('JUDGE_HOST')
+JUDGE_PORT = os.getenv('JUDGE_PORT')
+USE_HTTPS = False if os.getenv('JUDGE_SSL', None) != 'true' else True

@@ -1,10 +1,7 @@
 import random
 from zipfile import ZipFile
 
-from django.core.cache import cache
-
 from organization.models import User
-from utils.judger.client import Client
 
 
 def get_random_string(mode="mixDigitLetter", length=16):
@@ -35,21 +32,28 @@ def get_available_username(prefix, suffix, length):
         while ok:
             if prefix and suffix:
                 left_len = 13 - 2 - len(prefix) - len(suffix)
-                username = "{prefix}_{name}_{suffix}".format(prefix=prefix,
-                                                             name=get_random_string(mode="mixDigitLetterCharacter",
-                                                                                    length=left_len), suffix=suffix)
+                username = "{prefix}_{name}_{suffix}".format(
+                    prefix=prefix,
+                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len),
+                    suffix=suffix
+                )
             elif prefix:
                 left_len = 13 - 1 - len(prefix)
-                username = "{prefix}_{name}".format(prefix=prefix,
-                                                    name=get_random_string(mode="mixDigitLetterCharacter",
-                                                                           length=left_len))
+                username = "{prefix}_{name}".format(
+                    prefix=prefix,
+                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len)
+                )
             elif suffix:
                 left_len = 13 - 1 - len(suffix)
                 username = "{name}_{suffix}".format(
-                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len), suffix=prefix)
+                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len),
+                    suffix=prefix
+                )
             else:
                 left_len = 13
-                username = "{name}".format(name=get_random_string(mode="mixDigitLetterCharacter", length=left_len))
+                username = "{name}".format(
+                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len)
+                )
             try:
                 User.objects.get(username=username)
             except User.DoesNotExist:
@@ -73,9 +77,3 @@ def read_test_case(test_case):
             else:
                 return None
     return input_list, output_list
-
-
-def get_judge_client():
-    client = cache.get('client', Client())
-    cache.set('client', client, None)
-    return client
