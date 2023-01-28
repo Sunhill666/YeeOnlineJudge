@@ -36,9 +36,6 @@ class Training(TrainingBase):
     start_time = models.DateTimeField(_("start time"))
     end_time = models.DateTimeField(_("end time"))
     problems = models.ManyToManyField(Problem, related_name='train_problem')
-    '''
-    [31, 29, 32] # Problem Set ID
-    '''
     mode = models.CharField(_("training mode"), choices=Problem.Mode.choices, max_length=4)
 
     group = models.ManyToManyField(Group, related_name='train_groups')
@@ -51,6 +48,9 @@ class Training(TrainingBase):
 
 class LearningPlan(TrainingBase):
     stage = models.ManyToManyField(ProblemSet, related_name='stages')
+    '''
+    [31, 29, 32] # Problem Set ID
+    '''
     ordering = models.JSONField(_("ordering of stage"))
 
     class Meta(TrainingBase.Meta):

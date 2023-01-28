@@ -1,7 +1,10 @@
 import random
 from zipfile import ZipFile
 
+from django.db.models import Q
+
 from organization.models import User
+from submission.models import Submission
 
 
 def get_random_string(mode="mixDigitLetter", length=16):
@@ -77,3 +80,8 @@ def read_test_case(test_case):
             else:
                 return None
     return input_list, output_list
+
+
+def do_before(user_id, problem_id, status):
+    return Submission.objects.filter(Q(created_by=user_id) & Q(problem=problem_id) & Q(status=status)
+                                     & Q(training__isnull=True)).count() > 0
