@@ -16,15 +16,13 @@ class ListProblemInProblemTag(serializers.RelatedField):
 
 
 class BaseProblemTagSerializer(serializers.ModelSerializer):
-    problems = ListProblemInProblemTag(many=True, read_only=True)
-
     class Meta:
         model = ProblemTag
         fields = '__all__'
 
 
 class BaseProblemSerializer(serializers.ModelSerializer):
-    tags = serializers.StringRelatedField(many=True)
+    tags = BaseProblemTagSerializer(many=True)
 
     def to_internal_value(self, data):
         if tags_id := data.get('tags'):
