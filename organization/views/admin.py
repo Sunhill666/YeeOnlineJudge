@@ -10,8 +10,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from organization import permissions
 from organization.models import User, Group, UserProfile
-from organization.serializers import AdminUserSerializer, GroupsSerializer, CustomTokenObtainPairSerializer, \
-    GeneralUserListSerializer
+from organization.serializers import AdminUserSerializer, GroupsSerializer, GeneralUserListSerializer
 from utils.pagination import NumPagination
 from utils.tools import get_available_username, get_random_string
 
@@ -84,7 +83,7 @@ def batch_register(request):
             headers={'Content-Disposition': 'attachment; filename="batch_user.csv"'}
         )
         writer = csv.writer(response)
-        writer.writerow(['用户名', '密码'])
+        writer.writerow(['Username', 'Password'])
         writer.writerows(user_dict.items())
         return response
     else:
@@ -92,4 +91,12 @@ def batch_register(request):
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+    def post(self, request, *args, **kwargs):
+        resp = super().post(request, *args, **kwargs)
+        user = User.objects.get(username=request.data.get('username'))
+        if x_forwarded_for := request.META.get('HTTP_X_FORWARDED_FOR'):
+            user.last_login_ip = x_forwarded_for.split(',')[0]
+        else:
+            user.last_login_ip = request.META.get('REMOTE_ADDR')
+        user.save()
+        return resp

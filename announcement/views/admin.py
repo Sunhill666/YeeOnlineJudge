@@ -8,16 +8,12 @@ from utils.pagination import NumPagination
 
 
 class AnnouncementListCreateView(generics.ListCreateAPIView):
+    queryset = Announcement.objects.all().order_by('id')
     pagination_class = NumPagination
     permission_classes = [permissions.IsStaff]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     ordering_fields = ['created_time']
     search_fields = ['title', 'content']
-
-    def get_queryset(self):
-        if self.request.method == "GET":
-            return Announcement.objects.filter(training__isnull=True)
-        return Announcement.objects.all()
 
     def get_serializer_class(self):
         if self.request.method == "GET":

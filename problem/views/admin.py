@@ -1,9 +1,11 @@
-from rest_framework import viewsets, filters, generics
+from rest_framework import viewsets, filters, generics, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 
 from organization import permissions
 from problem.models import Problem, ProblemTag, TestCase
 from problem.serializers import ProblemListSerializer, AdminProblemSerializer, GeneralTestCaseSerializer, \
-    AdminProblemTagSerializer
+    AdminProblemTagSerializer, SpecialProblemListSerializer
 from utils.pagination import NumPagination
 
 
@@ -56,3 +58,11 @@ class TestCaseListCreateView(generics.ListCreateAPIView):
 class TestCaseDestroyView(generics.DestroyAPIView):
     queryset = TestCase.objects.all()
     permission_classes = [permissions.IsStaff]
+
+
+@api_view(["get"])
+@permission_classes([permissions.IsStaff])
+def special_problem_list(request):
+    queryset = Problem.objects.filter(visible=True)
+    serializer = SpecialProblemListSerializer(queryset, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

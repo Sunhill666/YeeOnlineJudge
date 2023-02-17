@@ -52,15 +52,15 @@ class Problem(models.Model):
     sample = models.JSONField(_("input output sample"), null=True)
     '''
     {
-        "C++": "……",
-        "Python": "…………"
+        "<language_id>": "……",
+        "<language_id>": "…………"
     }
     '''
     template = models.JSONField(_("completion template"), null=True)
     hint = models.TextField(_("hint"), null=True, blank=True)
     '''
     {
-        "languages": ["c", "c++", "java", ...]
+        "languages": [<language_id>, ...]
     }
     '''
     languages = models.JSONField(_("problem support languages"))
@@ -73,26 +73,21 @@ class Problem(models.Model):
     test_case = models.ForeignKey(TestCase, on_delete=models.PROTECT, related_name="cases")
     '''
     In ACM and OI mode:
-    {
+    [
         # test_case #1
-        0: {
+        {
             "input_name": "1.in",
             "output_name": "1.out",
             "point": 50 # ignore in ACM mode
         },
 
         # test_case #2
-        1: {
+        {
             "input_name": "2.in",
             "output_name": "2.out",
             "point": 50 # ignore in ACM mode
         }
-    }
-
-    In Func mode:
-    {
-        "point": 10
-    }
+    ]
     '''
     point = models.JSONField(_("test case structure and each point"))
 

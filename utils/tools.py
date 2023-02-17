@@ -5,6 +5,7 @@ from django.db.models import Q
 
 from organization.models import User
 from submission.models import Submission
+from utils.judger.judgeclient import JudgeClient
 
 
 def get_random_string(mode="mixDigitLetter", length=16):
@@ -37,25 +38,25 @@ def get_available_username(prefix, suffix, length):
                 left_len = 13 - 2 - len(prefix) - len(suffix)
                 username = "{prefix}_{name}_{suffix}".format(
                     prefix=prefix,
-                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len),
+                    name=get_random_string(mode="mixDigitLetter", length=left_len),
                     suffix=suffix
                 )
             elif prefix:
                 left_len = 13 - 1 - len(prefix)
                 username = "{prefix}_{name}".format(
                     prefix=prefix,
-                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len)
+                    name=get_random_string(mode="mixDigitLetter", length=left_len)
                 )
             elif suffix:
                 left_len = 13 - 1 - len(suffix)
                 username = "{name}_{suffix}".format(
-                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len),
+                    name=get_random_string(mode="mixDigitLetter", length=left_len),
                     suffix=prefix
                 )
             else:
                 left_len = 13
                 username = "{name}".format(
-                    name=get_random_string(mode="mixDigitLetterCharacter", length=left_len)
+                    name=get_random_string(mode="mixDigitLetter", length=left_len)
                 )
             try:
                 User.objects.get(username=username)
@@ -84,4 +85,13 @@ def read_test_case(test_case):
 
 def do_before(user_id, problem_id, status):
     return Submission.objects.filter(Q(created_by=user_id) & Q(problem=problem_id) & Q(status=status)
-                                     & Q(training__isnull=True)).count() > 0
+                                     & Q(training__isnull=True)).count() > 1
+
+
+def get_languages():
+    client = JudgeClient()
+    language_list = client.get_languages()
+    languages = dict()
+    for i in language_list:
+        languages.update({i.get('id'): i.get('name')})
+    return languages

@@ -19,7 +19,10 @@ class Submission(models.Model):
         EFE = 'Exec Format Error', _('运行格式错误')
 
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
-    token = models.JSONField(_("submission token"))
+    """
+    token = [token_1, token_2, ...]
+    """
+    token = models.JSONField(_("submission token"), default=list)
     code = models.TextField(_("submitted code"))
     language_id = models.IntegerField(_("submitted language"))
     training = models.ForeignKey(Training, on_delete=models.CASCADE, null=True)
@@ -35,3 +38,16 @@ class Submission(models.Model):
 
     class Meta:
         db_table = 'submission'
+
+
+prob_status = {
+    "In Queue": 1,
+    "Processing": 2,
+    "Accepted": 3,
+    "Wrong Answer": 4,
+    "Time Limit Exceeded": 5,
+    "Compilation Error": 6,
+    "Runtime Error": 7,
+    "Internal Error": 13,
+    "Exec Format Error": 14
+}

@@ -1,9 +1,7 @@
-import datetime
 import re
 
 from django.db.models import Q
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User, Group, UserProfile
 
@@ -43,7 +41,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 
 class BaseUserProfileSerializer(serializers.ModelSerializer):
-    group = serializers.StringRelatedField()
+    group = BaseGroupsSerialize()
 
     def to_internal_value(self, data):
         if group_name := data.get('group'):
@@ -110,7 +108,7 @@ class NormalUserSerializer(BaseUserSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'nickname', 'first_name', 'last_name', 'email', 'date_joined', 'profile', 'password']
+        fields = ['username', 'nickname', 'real_name', 'email', 'date_joined', 'profile', 'password']
         read_only_fields = ['username']
 
 
@@ -185,18 +183,3 @@ class UserRankListSerializer(BaseUserProfileSerializer):
         model = UserProfile
         fields = ['user_id', 'user', 'avatar', 'accepted_num', 'commit_num', 'group']
         read_only_fields = ['accepted_num', 'commit_num', 'avatar']
-
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def create(self, validated_data):
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        return super().update(instance, validated_data)
-
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        user.last_login = datetime.datetime.now()
-        user.save()
-        return token

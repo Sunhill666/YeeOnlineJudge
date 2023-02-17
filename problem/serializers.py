@@ -3,6 +3,7 @@ from zipfile import ZipFile
 from rest_framework import serializers
 
 from problem.models import Problem, ProblemTag, TestCase
+from utils.tools import get_languages
 
 
 # 基本序列化器
@@ -37,6 +38,9 @@ class BaseProblemSerializer(serializers.ModelSerializer):
         return data
 
     def validate(self, data):
+        for i in data.get('languages'):
+            if i not in get_languages().keys():
+                raise serializers.ValidationError({"detail": "specify language does not support"})
         if tc_id := data.get('test_case'):
             try:
                 test_case = TestCase.objects.get(id=tc_id)
@@ -147,6 +151,12 @@ class ProblemListSerializer(BaseProblemSerializer):
     class Meta:
         model = Problem
         fields = ['id', 'title', 'difficulty', 'tags', 'statistics']
+
+
+class SpecialProblemListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Problem
+        fields = ['id', 'title']
 
 
 class GeneralTestCaseSerializer(BaseTestCaseSerializer):

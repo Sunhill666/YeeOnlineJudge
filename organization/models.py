@@ -78,12 +78,12 @@ class User(AbstractBaseUser):
     is_staff = models.BooleanField(_('staff status'), default=False, )
     is_active = models.BooleanField(_('active'), default=True, )
     is_superuser = models.BooleanField(_('superuser status'), default=False)
-    first_name = models.CharField(_('first name'), max_length=10)
-    last_name = models.CharField(_('last name'), max_length=5)
+    real_name = models.CharField(_('real name'), max_length=25)
     email = models.EmailField(_('email address'))
-    user_role = models.CharField("user role", max_length=3, choices=UserRole.choices)
-    user_permission = models.CharField("user permission", max_length=4, choices=Permission.choices)
+    user_role = models.CharField(_("user role"), max_length=3, choices=UserRole.choices)
+    user_permission = models.CharField(_("user permission"), max_length=4, choices=Permission.choices)
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
+    last_login_ip = models.GenericIPAddressField(_("last login ip addr"), blank=True, null=True)
 
     objects = CustomUserManager()
 
@@ -91,15 +91,8 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
-    def get_full_name(self):
-        full_name = '%s %s' % (self.last_name, self.first_name)
-        return full_name.strip()
-
-    def get_short_name(self):
-        return self.first_name
-
     def __str__(self):
-        return self.get_full_name()
+        return self.real_name
 
     class Meta:
         db_table = "user"
@@ -118,12 +111,12 @@ class UserProfile(models.Model):
         ...
     }
     '''
-    statistics = models.JSONField("problem statistics", default=dict)
+    statistics = models.JSONField(_("problem statistics"), default=dict)
     avatar = models.ImageField(upload_to='avatar/', default=f"avatar/default.jpg", null=True)
     bio = models.CharField(_('bio'), max_length=50, blank=True, null=True)
 
     def __str__(self):
-        return self.user.get_full_name
+        return self.user.real_name
 
     class Meta:
         db_table = "userprofile"

@@ -3,22 +3,18 @@ from datetime import datetime
 from rest_framework import serializers
 
 from problem.models import Problem
-from submission.models import Submission
+from submission.models import Submission, prob_status
 from training.models import Training
-from utils.judger.languages import languages, prob_status
 
 
 class BaseSubmissionSerializers(serializers.ModelSerializer):
     created_by = serializers.StringRelatedField()
 
     def validate(self, attrs):
-        if attrs.get('language_id') not in languages.keys():
-            raise serializers.ValidationError({"detail": "language does not support"})
+        problem = attrs.get("problem")
 
-        try:
-            problem = Problem.objects.get(pk=attrs.get("problem"))
-        except Problem.DoesNotExist:
-            raise serializers.ValidationError({"detail": "problem does not exist"})
+        if attrs.get('language_id') not in problem.languages:
+            raise serializers.ValidationError({"detail": "language does not support"})
 
         if training_id := attrs.get('training'):
             try:
@@ -39,8 +35,9 @@ class BaseSubmissionSerializers(serializers.ModelSerializer):
         return attrs
 
     def to_internal_value(self, data):
-        status = Submission.translate_status(data.get('status'))
-        data.update(status=status)
+        if data.get('status'):
+            status = Submission.translate_status(data.get('status'))
+            data.update(status=status)
         return super().to_internal_value(data)
 
     def to_representation(self, instance):

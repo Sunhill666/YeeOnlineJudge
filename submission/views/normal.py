@@ -2,18 +2,18 @@ from rest_framework import status, permissions, filters, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from YeeOnlineJudge.task import to_judge
+from YeeOnlineJudge.tasks import to_judge
 from problem.models import Problem
 from submission.models import Submission
 from submission.serializers import BaseSubmissionSerializers
 from training.models import TrainingRank
 from utils.judger import submission
-from utils.judger.languages import languages
 from utils.pagination import NumPagination
+from utils.tools import get_languages
 
 
 class SubmissionListCreateView(generics.ListCreateAPIView):
-    queryset = Submission.objects.all()
+    queryset = Submission.objects.all().order_by('id')
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = NumPagination
     serializer_class = BaseSubmissionSerializers
@@ -43,7 +43,7 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
             to_judge.delay(
                 code=request.data.get('code'),
                 language_id=request.data.get('language_id'),
-                problem=Problem.objects.get(pk=request.data.get('problem')),
+                problem_id=request.data.get('problem'),
                 submission_id=submit.id,
                 training=request.data.get('training')
             )
@@ -66,5 +66,4 @@ class SubmissionRetrieveView(generics.RetrieveAPIView):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def language_list(request):
-    if request.method == "GET":
-        return Response(languages, status=status.HTTP_200_OK)
+    return Response(get_languages(), status=status.HTTP_200_OK)

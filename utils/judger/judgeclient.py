@@ -31,7 +31,7 @@ class JudgeClient:
         self.authn_token = settings.AUTHN_TOKEN
         self.authz_token = settings.AUTHZ_TOKEN
         if settings.USE_HTTPS:
-            self.endpoint = "https://" + settings.JUDGE_HOST + ':' + str(settings.JUDGE_PORT)
+            self.endpoint = "https://" + settings.JUDGE_HOST
         else:
             self.endpoint = "http://" + settings.JUDGE_HOST + ':' + str(settings.JUDGE_PORT)
         self.session = requests.session()
@@ -57,3 +57,8 @@ class JudgeClient:
         r = requests.post(f"{self.endpoint}/authorize", headers=header)
         r.raise_for_status()
         self.session.headers.update(header)
+
+    def get_languages(self):
+        r = self.session.get(f"{self.endpoint}/languages")
+        r.raise_for_status()
+        return r.json()

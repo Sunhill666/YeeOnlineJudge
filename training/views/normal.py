@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from submission.models import Submission
-from submission.serializers import SubmissionSerializers
+from submission.serializers import BaseSubmissionSerializers
 from training.models import Training, TrainingRank, LearningPlan
 from training.serializers import TrainingListSerializer, NormalDetailTrainingSerializer, LearningPlanListSerializer, \
     NormalDetailLearningPlanSerializer
@@ -66,7 +66,7 @@ def training_verify(request):
 
 class ContestSubmitList(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = SubmissionSerializers
+    serializer_class = BaseSubmissionSerializers
     pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']

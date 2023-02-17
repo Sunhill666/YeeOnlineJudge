@@ -7,7 +7,7 @@ from problem.models import Problem
 
 class ProblemSet(models.Model):
     title = models.CharField(_("title"), max_length=25)
-    problems = models.ManyToManyField(Problem, related_name='problem')
+    problems = models.ManyToManyField(Problem, related_name='problem', blank=True)
 
     def __str__(self):
         return self.title
