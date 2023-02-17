@@ -72,8 +72,8 @@ def batch_register(request):
     user_dict = dict()
     for i in username_list:
         password = get_random_string() if random_pwd else request.data.get('password')
-        user = User.objects.create_user(username=i, password=password, first_name="user",
-                                        last_name="batch", email="batch@default.com")
+        user = User.objects.create_user(username=i, password=password,
+                                        real_name="user batch", email="batch@default.com")
         UserProfile.objects.create(user=user, group=batch_group[0])
         user_dict.update({i: password})
 
