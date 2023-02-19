@@ -3,7 +3,7 @@ from datetime import datetime
 from rest_framework import serializers
 
 from problem.models import Problem
-from submission.models import Submission, prob_status
+from submission.models import Submission
 from training.models import Training
 
 
@@ -48,10 +48,16 @@ class BaseSubmissionSerializers(serializers.ModelSerializer):
             'title': problem.title
         }
         ret.update({'problem': prob_dict})
-        ret.update({'status': prob_status.get(ret.get('status'))})
+        ret.update({'status': ret.get('status')})
         return ret
 
     class Meta:
         model = Submission
         fields = '__all__'
         read_only_fields = ['status', 'created_time', 'created_by']
+
+
+class SubmissionListSerializers(BaseSubmissionSerializers):
+    class Meta:
+        model = Submission
+        exclude = ['token', 'code']

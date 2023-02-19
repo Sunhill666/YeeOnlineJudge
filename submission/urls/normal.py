@@ -4,6 +4,6 @@ from submission.views.normal import SubmissionListCreateView, SubmissionRetrieve
 
 urlpatterns = [
     re_path(r'^submission/$', SubmissionListCreateView.as_view()),
-    re_path(r'^submission/(?P<token>.+)/$', SubmissionRetrieveView.as_view()),
+    re_path(r'^submission/(?P<pk>\d+)/$', SubmissionRetrieveView.as_view()),
     re_path(r'^language/$', language_list)
 ]

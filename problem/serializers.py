@@ -1,8 +1,11 @@
 from zipfile import ZipFile
 
+from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q
 from rest_framework import serializers
 
 from problem.models import Problem, ProblemTag, TestCase
+from submission.models import Submission
 from utils.tools import get_languages
 
 
@@ -146,6 +149,23 @@ class NormalProblemSerializer(BaseProblemSerializer):
 
 
 class ProblemListSerializer(BaseProblemSerializer):
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        user = self.context.get('request').user
+        if not isinstance(user, AnonymousUser):
+            if Submission.objects.filter(
+                    Q(created_by=user.username) & Q(status=Submission.Status.ACCEPTED) & Q(problem=instance)
+            ).distinct().count() > 0:
+                done = 1
+            elif Submission.objects.filter(
+                    Q(created_by=user.username) & Q(problem=instance)
+            ).distinct().count() == 0:
+                done = -1
+            else:
+                done = 0
+            ret.update(done=done)
+        return ret
+
     class Meta:
         model = Problem
         fields = ['id', 'title', 'difficulty', 'tags', 'statistics']

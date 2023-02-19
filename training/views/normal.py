@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from submission.models import Submission
-from submission.serializers import BaseSubmissionSerializers
+from submission.serializers import SubmissionListSerializers
 from training.models import Training, TrainingRank, LearningPlan
 from training.serializers import TrainingListSerializer, NormalDetailTrainingSerializer, LearningPlanListSerializer, \
     NormalDetailLearningPlanSerializer
@@ -66,15 +66,15 @@ def training_verify(request):
 
 class ContestSubmitList(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = BaseSubmissionSerializers
+    serializer_class = SubmissionListSerializers
     pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
     ordering_fields = ['start_time']
 
     def list(self, request, *args, **kwargs):
-        contestper = cache.get(request.user.username + '_contest', dict())
-        if not contestper.get(kwargs.get('pk'), False):
+        contest_status = cache.get(request.user.username + '_contest', dict())
+        if not contest_status.get(kwargs.get('pk'), False):
             return Response({"detail": "验证不通过，没有权限参加"}, status=status.HTTP_403_FORBIDDEN)
         queryset = self.filter_queryset(Submission.objects.filter(contest_id=kwargs.get('pk'))
                                         .order_by('-created_time'))

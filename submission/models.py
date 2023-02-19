@@ -38,16 +38,3 @@ class Submission(models.Model):
 
     class Meta:
         db_table = 'submission'
-
-
-prob_status = {
-    "In Queue": 1,
-    "Processing": 2,
-    "Accepted": 3,
-    "Wrong Answer": 4,
-    "Time Limit Exceeded": 5,
-    "Compilation Error": 6,
-    "Runtime Error": 7,
-    "Internal Error": 13,
-    "Exec Format Error": 14
-}

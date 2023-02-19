@@ -45,7 +45,7 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
     submit.save()
 
     if training:
-        process_training.delay(submission_id)
+        pass
     else:
         process_statistics.delay(submission_id, "Problem")
         process_statistics.delay(submission_id, "User")
@@ -57,8 +57,6 @@ def process_statistics(submission_id, process_type):
     submit = Submission.objects.get(pk=submission_id)
     creator_profile = submit.created_by.profile
     problem = submit.problem
-
-    print(submit.status)
 
     # 更新题目或用户数据
     if process_type == "User":
@@ -91,9 +89,9 @@ def process_statistics(submission_id, process_type):
     return {process_type: statistics}
 
 
-@shared_task
-def process_training(submission_id):
-    submit = Submission.objects.get(pk=submission_id)
-    train = submit.training
-    tokens = submit.token
-    right_before = False
+# @shared_task
+# def process_training(submission_id):
+#     submit = Submission.objects.get(pk=submission_id)
+#     train = submit.training
+#     tokens = submit.token
+#     right_before = False

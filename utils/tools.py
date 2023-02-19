@@ -24,7 +24,7 @@ def get_random(random_list, length=16):
     """
     生成一个指定长度的随机字符串
     """
-    str_list = [random.choice(random_list) for i in range(length)]
+    str_list = [random.choice(random_list) for _ in range(length)]
     random_str = ''.join(str_list)
     return random_str
 

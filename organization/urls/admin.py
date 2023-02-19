@@ -10,5 +10,5 @@ router.register(r'group', GroupViewSet)
 urlpatterns = [
     re_path(r'^user/$', UserListCreateView.as_view()),
     re_path(r'^userbatch/$', batch_register),
-    re_path(r'^user/(?P<pk>\d+)/$', UserRetrieveUpdateDestroyView.as_view()),
+    re_path(r'^user/(?P<pk>\w+)/$', UserRetrieveUpdateDestroyView.as_view()),
 ] + router.urls

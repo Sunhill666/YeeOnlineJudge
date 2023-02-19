@@ -47,7 +47,7 @@ class Training(TrainingBase):
 
 
 class LearningPlan(TrainingBase):
-    stage = models.ManyToManyField(ProblemSet, related_name='stages')
+    stage = models.ManyToManyField(ProblemSet, related_name='stages', blank=True)
     '''
     [31, 29, 32] # Problem Set ID
     '''

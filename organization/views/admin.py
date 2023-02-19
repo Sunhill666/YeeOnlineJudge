@@ -67,7 +67,7 @@ def batch_register(request):
     else:
         random_pwd = True
 
-    batch_group = Group.objects.get_or_create(name="批量添加")
+    batch_group = Group.objects.get_or_create(name=request.data.get('group', "批量添加"))
 
     user_dict = dict()
     for i in username_list:

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from YeeOnlineJudge.tasks import to_judge
 from problem.models import Problem
 from submission.models import Submission
-from submission.serializers import BaseSubmissionSerializers
+from submission.serializers import BaseSubmissionSerializers, SubmissionListSerializers
 from training.models import TrainingRank
 from utils.judger import submission
 from utils.pagination import NumPagination
@@ -13,13 +13,17 @@ from utils.tools import get_languages
 
 
 class SubmissionListCreateView(generics.ListCreateAPIView):
-    queryset = Submission.objects.all().order_by('id')
+    queryset = Submission.objects.filter(training__isnull=True).order_by('id')
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = NumPagination
-    serializer_class = BaseSubmissionSerializers
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['created_by__username', 'problem__title']
     ordering_fields = ['created_time']
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return SubmissionListSerializers
+        return BaseSubmissionSerializers
 
     def create(self, request, *args, **kwargs):
         if request.data.get('stdin'):
@@ -58,9 +62,6 @@ class SubmissionRetrieveView(generics.RetrieveAPIView):
     queryset = Submission.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = BaseSubmissionSerializers
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response()
 
 
 @api_view(['GET'])
