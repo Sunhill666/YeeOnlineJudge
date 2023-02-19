@@ -12,7 +12,7 @@ from training.models import Training, TrainingRank, ProblemSet, LearningPlan
 class BaseProblemSetSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        serializer = ProblemListSerializer(instance=instance.problems, many=True)
+        serializer = ProblemListSerializer(instance=instance.problems, many=True, context=self.context)
         ret.update(problems=serializer.data)
         return ret
 
@@ -52,7 +52,7 @@ class BaseTrainingSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        serializer = ProblemListSerializer(instance=instance.problems, many=True)
+        serializer = ProblemListSerializer(instance=instance.problems, many=True, context=self.context)
         ann = NormalAnnouncementDetailSerializer(
             instance=Announcement.objects.filter(training=instance.id).order_by('-created_time'),
             many=True
@@ -87,7 +87,7 @@ class BaseLearningPlanSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        serializer = BaseProblemSetSerializer(instance=instance.stage, many=True)
+        serializer = BaseProblemSetSerializer(instance=instance.stage, many=True, context=self.context)
         ret.update(stage=serializer.data)
         return ret
 
