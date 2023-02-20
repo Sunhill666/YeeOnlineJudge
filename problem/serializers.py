@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from problem.models import Problem, ProblemTag, TestCase
 from submission.models import Submission
-from utils.tools import get_languages
+from utils.tools import get_languages, prase_template
 
 
 # 基本序列化器
@@ -42,6 +42,12 @@ class BaseProblemSerializer(serializers.ModelSerializer):
         for i in data.get('languages'):
             if i not in get_languages().keys():
                 raise serializers.ValidationError({"detail": "specify language does not support"})
+
+        if template := data.get('template'):
+            for key in template.keys():
+                if int(key) not in data.get('languages'):
+                    raise serializers.ValidationError({"detail": "specify language in template does not support"})
+
         if tc_id := data.get('test_case'):
             try:
                 test_case = TestCase.objects.get(id=tc_id)
@@ -136,15 +142,22 @@ class AdminProblemSerializer(BaseProblemSerializer):
 
 
 class NormalProblemSerializer(BaseProblemSerializer):
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if ret.get('template'):
+            for key, val in ret.get('template').items():
+                ret.get('template')[key] = prase_template(val).get('template')
+        return ret
+
     class Meta:
         model = Problem
         fields = [
-            'id', 'title', 'desc', 'input_desc', 'output_desc', 'sample', 'hint', 'languages', 'time_limit', 'point',
-            'memory_limit', 'difficulty', 'difficulty', 'tags', 'source', 'statistics'
+            'id', 'title', 'desc', 'input_desc', 'output_desc', 'sample', 'template', 'hint', 'languages', 'time_limit',
+            'point', 'memory_limit', 'difficulty', 'difficulty', 'tags', 'source', 'statistics'
         ]
         read_only_fields = [
-            'id', 'title', 'desc', 'input_desc', 'output_desc', 'sample', 'hint', 'languages', 'time_limit', 'point',
-            'memory_limit', 'difficulty', 'difficulty', 'tags', 'source', 'statistics'
+            'id', 'title', 'desc', 'input_desc', 'output_desc', 'sample', 'template', 'hint', 'languages', 'time_limit',
+            'point', 'memory_limit', 'difficulty', 'difficulty', 'tags', 'source', 'statistics'
         ]
 
 

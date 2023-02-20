@@ -1,4 +1,5 @@
 import random
+import re
 from zipfile import ZipFile
 
 from django.db.models import Q
@@ -6,6 +7,21 @@ from django.db.models import Q
 from organization.models import User
 from submission.models import Submission
 from utils.judger.judgeclient import JudgeClient
+
+
+TEMPLATE_BASE = """//PREPEND BEGIN
+{prepend}
+//PREPEND END
+//TEMPLATE BEGIN
+{template}
+//TEMPLATE END
+//APPEND BEGIN
+{append}
+//APPEND END"""
+
+PREPEND_PATTERN = r"//PREPEND BEGIN\n([\s\S]+?)//PREPEND END"
+TEMPLATE_PATTERN = r"//TEMPLATE BEGIN\n([\s\S]+?)//TEMPLATE END"
+APPEND_PATTERN = r"//APPEND BEGIN\n([\s\S]+?)//APPEND END"
 
 
 def get_random_string(mode="mixDigitLetter", length=16):
@@ -95,3 +111,18 @@ def get_languages():
     for i in language_list:
         languages.update({i.get('id'): i.get('name')})
     return languages
+
+
+def prase_template(template_str):
+    prepend = re.search(PREPEND_PATTERN, template_str)
+    template = re.search(TEMPLATE_PATTERN, template_str)
+    append = re.search(APPEND_PATTERN, template_str)
+    return {
+        "prepend": prepend.group(1) if prepend else "",
+        "template": template.group(1) if template else "",
+        "append": append.group(1) if template else ""
+    }
+
+
+def build_template(prepend, template, append):
+    return TEMPLATE_BASE.format(prepend=prepend, template=template, append=append)

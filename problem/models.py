@@ -52,7 +52,9 @@ class Problem(models.Model):
     sample = models.JSONField(_("input output sample"), null=True)
     '''
     {
-        "<language_id>": "……",
+        "50": "//PREPEND BEGIN\n#include <stdio.h>\n//PREPEND END\n\n//TEMPLATE BEGIN\nint add(int a, int b) {\n  // 
+    Please fill this blank\n  return ___________;\n}\n//TEMPLATE END\n\n//APPEND BEGIN\nint main() {\n  printf(\"%d\", 
+    add(1, 2));\n  return 0;\n}\n//APPEND END",
         "<language_id>": "…………"
     }
     '''

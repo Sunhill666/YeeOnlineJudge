@@ -9,7 +9,7 @@ from submission.serializers import BaseSubmissionSerializers, SubmissionListSeri
 from training.models import TrainingRank
 from utils.judger import submission
 from utils.pagination import NumPagination
-from utils.tools import get_languages
+from utils.tools import get_languages, prase_template
 
 
 class SubmissionListCreateView(generics.ListCreateAPIView):
@@ -26,6 +26,13 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
         return BaseSubmissionSerializers
 
     def create(self, request, *args, **kwargs):
+        if template := Problem.objects.get(pk=request.data.get('problem')).template:
+            if request.data.get('language_id') in [int(i) for i in template.keys()]:
+                prased = prase_template(template.get(str(request.data.get('language_id'))))
+                request.data.update({
+                    "code": f"{prased.get('prepend')}\n{request.data.get('code')}\n{prased.get('append')}"
+                })
+
         if request.data.get('stdin'):
             expected_output = request.data.get('expected_output')
             problem = Problem.objects.get(pk=request.data.get('problem'))

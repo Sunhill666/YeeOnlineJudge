@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from submission.models import Submission
 from submission.serializers import SubmissionListSerializers
 from training.models import Training, TrainingRank, LearningPlan
-from training.serializers import TrainingListSerializer, NormalDetailTrainingSerializer, LearningPlanListSerializer, \
+from training.serializers import TrainingListSerializer, NormalDetailTrainingSerializer, \
     NormalDetailLearningPlanSerializer
 from utils.pagination import NumPagination
 
@@ -30,7 +30,7 @@ class ContestRetrieveView(generics.RetrieveAPIView):
 
 class LearningPlanListView(generics.ListAPIView):
     queryset = LearningPlan.objects.filter(is_open=True)
-    serializer_class = LearningPlanListSerializer
+    serializer_class = NormalDetailLearningPlanSerializer
     pagination_class = NumPagination
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]

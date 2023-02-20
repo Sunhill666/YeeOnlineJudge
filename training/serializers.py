@@ -136,9 +136,3 @@ class NormalDetailLearningPlanSerializer(BaseLearningPlanSerializer):
     class Meta:
         model = LearningPlan
         fields = '__all__'
-
-
-class LearningPlanListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LearningPlan
-        exclude = ['description', 'ordering']
