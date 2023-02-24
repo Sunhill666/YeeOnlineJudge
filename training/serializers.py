@@ -92,6 +92,10 @@ class BaseLearningPlanSerializer(serializers.ModelSerializer):
         return ret
 
     def validate(self, attrs):
+        if attrs.get('stage') is None:
+            raise serializers.ValidationError({"detail": "stage can not be null"})
+        if attrs.get('ordering') is None:
+            raise serializers.ValidationError({"detail": "ordering can not be null"})
         stage = attrs['stage']
         order = attrs['ordering']
         if len(stage) != len(order):

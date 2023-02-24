@@ -4,8 +4,6 @@ from zipfile import ZipFile
 
 from django.db.models import Q
 
-from organization.models import User
-from submission.models import Submission
 from utils.judger.judgeclient import JudgeClient
 
 
@@ -74,6 +72,7 @@ def get_available_username(prefix, suffix, length):
                 username = "{name}".format(
                     name=get_random_string(mode="mixDigitLetter", length=left_len)
                 )
+            from organization.models import User
             try:
                 User.objects.get(username=username)
             except User.DoesNotExist:
@@ -100,6 +99,7 @@ def read_test_case(test_case):
 
 
 def do_before(user_id, problem_id, status):
+    from submission.models import Submission
     return Submission.objects.filter(Q(created_by=user_id) & Q(problem=problem_id) & Q(status=status)
                                      & Q(training__isnull=True)).count() > 1
 
@@ -126,3 +126,18 @@ def prase_template(template_str):
 
 def build_template(prepend, template, append):
     return TEMPLATE_BASE.format(prepend=prepend, template=template, append=append)
+
+
+def default_statistics():
+    return {
+        "Commit": 0,
+        "In Queue": 0,
+        "Processing": 0,
+        "Accepted": 0,
+        "Wrong Answer": 0,
+        "Time Limit Exceeded": 0,
+        "Compilation Error": 0,
+        "Runtime Error": 0,
+        "Internal Error": 0,
+        "Exec Format Error": 0
+    }

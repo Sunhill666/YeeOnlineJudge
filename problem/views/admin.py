@@ -43,7 +43,6 @@ class ProblemTagViewSet(viewsets.ModelViewSet):
     serializer_class = AdminProblemTagSerializer
     queryset = ProblemTag.objects.all()
     permission_classes = [permissions.IsStaff]
-    pagination_class = NumPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['tag_name']
 

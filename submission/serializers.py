@@ -1,10 +1,10 @@
 from datetime import datetime
 
+from django.core.cache import cache
 from rest_framework import serializers
 
 from problem.models import Problem
 from submission.models import Submission
-from training.models import Training
 
 
 class BaseSubmissionSerializers(serializers.ModelSerializer):
@@ -16,21 +16,19 @@ class BaseSubmissionSerializers(serializers.ModelSerializer):
         if attrs.get('language_id') not in problem.languages:
             raise serializers.ValidationError({"detail": "language does not support"})
 
-        if training_id := attrs.get('training'):
-            try:
-                training = Training.objects.get(pk=training_id)
-            except Training.DoesNotExist:
-                return serializers.ValidationError({"detail": "training does not exist"})
-
+        if training := attrs.get('training'):
+            training_verify_set = cache.get('training_verify', set())
+            if self.context.get('request').user.username not in training_verify_set:
+                raise serializers.ValidationError({"detail": "you do not have permission to access this training"})
             if datetime.now() > training.end_time:
-                return serializers.ValidationError({"detail": "training has expired"})
+                raise serializers.ValidationError({"detail": "training has expired"})
             if datetime.now() < training.start_time:
-                return serializers.ValidationError({"detail": "training has not started"})
+                raise serializers.ValidationError({"detail": "training has not started"})
 
             try:
                 training.problems.get(problem=problem)
             except Problem.DoesNotExist:
-                return serializers.ValidationError({"detail": "problem not in this training"})
+                raise serializers.ValidationError({"detail": "problem not in this training"})
 
         return attrs
 

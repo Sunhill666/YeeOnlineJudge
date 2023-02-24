@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import check_password
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics, filters, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -55,13 +56,24 @@ def training_verify(request):
     except Training.DoesNotExist:
         return Response({"detail": "比赛不存在"}, status=status.HTTP_404_NOT_FOUND)
 
-    if training.password and not check_password(request.data.get('password'), training.password):
-        return Response({"detail": "密码错误"}, status=status.HTTP_400_BAD_REQUEST)
-
     training_verify_set = cache.get('training_verify', set())
-    training_verify_set.add(request.user.username)
-    cache.set('training_verify', training_verify_set, None)
-    return Response({"detail": "ok"}, status=status.HTTP_200_OK)
+
+    if request.data.get('password') and \
+            training.password and \
+            check_password(request.data.get('password'), training.password):
+        training_verify_set.add(request.user.username)
+        cache.set('training_verify', training_verify_set, None)
+        return Response({"detail": "ok"}, status=status.HTTP_200_OK)
+
+    # 无密码使用身份认证参加，如登录用户在比赛所允许的用户或组内，即可认证成功
+    try:
+        user_group = request.user.profile.group
+        if training.user.get(username=request.user.username) or training.group.get(pk=user_group.id):
+            training_verify_set.add(request.user.username)
+            cache.set('training_verify', training_verify_set, None)
+            return Response({"detail": "ok"}, status=status.HTTP_200_OK)
+    except ObjectDoesNotExist:
+        return Response({"detail": "failed"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class ContestSubmitList(generics.ListAPIView):

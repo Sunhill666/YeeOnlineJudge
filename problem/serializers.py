@@ -36,6 +36,10 @@ class BaseProblemSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({"detail": f"tag id '{tag_id}' does not exists"})
             tags = ProblemTag.objects.filter(id__in=tags_id)
             data.update(tags=tags)
+        if data.get('mode') == 'ACM':
+            for point in data.get('point'):
+                if not point.__contains__('point'):
+                    point.update(point="100")
         return data
 
     def validate(self, data):

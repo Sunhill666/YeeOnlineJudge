@@ -15,15 +15,9 @@ class IsStaff(permissions.BasePermission):
 
 class HasPermissionOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        if request.user.user_permission == User.Permission.ALL:
-            return True
-        elif request.user.user_permission == User.Permission.SELF and obj.created_by == request.user:
-            return True
-        return False
-
-
-class HasPermissionToJoin(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        pass
+        return bool(
+            request.method in permissions.SAFE_METHODS or
+            request.user.user_permission == User.Permission.ALL or
+            (request.user.user_permission == User.Permission.SELF and
+             obj.created_by == request.user)
+        )

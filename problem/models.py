@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from organization.models import User
+from utils.tools import default_statistics
 
 
 class ProblemTag(models.Model):
@@ -109,7 +110,7 @@ class Problem(models.Model):
         ...
     }
     '''
-    statistics = models.JSONField(_("problem statistics"), default=dict)
+    statistics = models.JSONField(_("problem statistics"), default=default_statistics)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='creator')
 
     def __str__(self):
