@@ -9,7 +9,7 @@ from submission.models import Submission
 from submission.serializers import SubmissionListSerializers
 from training.models import Training, TrainingRank, LearningPlan
 from training.serializers import TrainingListSerializer, NormalDetailTrainingSerializer, \
-    NormalDetailLearningPlanSerializer
+    NormalDetailLearningPlanSerializer, BaseContestRankSerializer
 from utils.pagination import NumPagination
 
 
@@ -56,13 +56,13 @@ def training_verify(request):
     except Training.DoesNotExist:
         return Response({"detail": "比赛不存在"}, status=status.HTTP_404_NOT_FOUND)
 
-    training_verify_set = cache.get('training_verify', set())
+    training_verify_set = cache.get('training_verify_' + str(request.data.get('id')), set())
 
     if request.data.get('password') and \
             training.password and \
             check_password(request.data.get('password'), training.password):
         training_verify_set.add(request.user.username)
-        cache.set('training_verify', training_verify_set, None)
+        cache.set('training_verify_' + str(request.data.get('id')), training_verify_set, None)
         return Response({"detail": "ok"}, status=status.HTTP_200_OK)
 
     # 无密码使用身份认证参加，如登录用户在比赛所允许的用户或组内，即可认证成功
@@ -70,7 +70,7 @@ def training_verify(request):
         user_group = request.user.profile.group
         if training.user.get(username=request.user.username) or training.group.get(pk=user_group.id):
             training_verify_set.add(request.user.username)
-            cache.set('training_verify', training_verify_set, None)
+            cache.set('training_verify_' + str(request.data.get('id')), training_verify_set, None)
             return Response({"detail": "ok"}, status=status.HTTP_200_OK)
     except ObjectDoesNotExist:
         return Response({"detail": "failed"}, status=status.HTTP_403_FORBIDDEN)
@@ -85,10 +85,10 @@ class ContestSubmitList(generics.ListAPIView):
     ordering_fields = ['start_time']
 
     def list(self, request, *args, **kwargs):
-        contest_status = cache.get(request.user.username + '_contest', dict())
-        if not contest_status.get(kwargs.get('pk'), False):
-            return Response({"detail": "验证不通过，没有权限参加"}, status=status.HTTP_403_FORBIDDEN)
-        queryset = self.filter_queryset(Submission.objects.filter(contest_id=kwargs.get('pk'))
+        training_verify_set = cache.get('training_verify_' + str(kwargs.get('pk')), set())
+        if request.user.username not in training_verify_set:
+            return Response({"detail": "验证不通过，没有权限"}, status=status.HTTP_403_FORBIDDEN)
+        queryset = self.filter_queryset(Submission.objects.filter(training_id=kwargs.get('pk'))
                                         .order_by('-created_time'))
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -101,15 +101,25 @@ class ContestSubmitList(generics.ListAPIView):
 
 class ContestRankList(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BaseContestRankSerializer
     pagination_class = NumPagination
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['user']
-    ordering_fields = ['commit_num', 'accepted_num', 'score']
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ["statistics__score", "statistics__statistics__Accepted", "statistics__statistics__Commit"]
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(TrainingRank.objects.filter(contest_id=kwargs.get('pk')).
-                                        order_by('-score', '-accepted_num', 'commit_num'))
+        training_verify_set = cache.get('training_verify_' + str(kwargs.get('pk')), set())
+        if request.user.username not in training_verify_set:
+            return Response({"detail": "验证不通过，没有权限"}, status=status.HTTP_403_FORBIDDEN)
+        queryset = self.filter_queryset(
+            TrainingRank.objects.filter(training_id=kwargs.get('pk')).
+            order_by(
+                "-statistics__score",
+                "-statistics__statistics__Accepted",
+                "statistics__statistics__Commit"
+            )
+        )
         page = self.paginate_queryset(queryset)
+
         if page is not None:
             serializer = self.get_serializer(instance=page, many=True)
             return self.get_paginated_response(serializer.data)

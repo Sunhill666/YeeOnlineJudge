@@ -9,7 +9,7 @@ from submission.serializers import BaseSubmissionSerializers, SubmissionListSeri
 from training.models import TrainingRank
 from utils.judger import submission
 from utils.pagination import NumPagination
-from utils.tools import get_languages, prase_template
+from utils.tools import get_languages, prase_template, default_statistics
 
 
 class SubmissionListCreateView(generics.ListCreateAPIView):
@@ -26,12 +26,18 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
         return BaseSubmissionSerializers
 
     def create(self, request, *args, **kwargs):
+        # 如果问题中有template存在且提交的语言为template支持的语言，则把提交的代码与template结合起来提交
         if template := Problem.objects.get(pk=request.data.get('problem')).template:
             if request.data.get('language_id') in [int(i) for i in template.keys()]:
                 prased = prase_template(template.get(str(request.data.get('language_id'))))
                 request.data.update({
                     "code": f"{prased.get('prepend')}\n{request.data.get('code')}\n{prased.get('append')}"
                 })
+
+        if x_forwarded_for := request.META.get('HTTP_X_FORWARDED_FOR'):
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
 
         if request.data.get('stdin'):
             expected_output = request.data.get('expected_output')
@@ -49,7 +55,7 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
         else:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            submit = serializer.save(created_by=request.user, status=Submission.Status.IQ)
+            submit = serializer.save(created_by=request.user, status=Submission.Status.IQ, submit_ip=ip)
             headers = self.get_success_headers(serializer.data)
             to_judge.delay(
                 code=request.data.get('code'),
@@ -60,7 +66,14 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
             )
 
         if training := request.data.get('training'):
-            TrainingRank.objects.create(user=request.user, training=training)
+            try:
+                TrainingRank.objects.get(user=request.user, training_id=training)
+            except TrainingRank.DoesNotExist:
+                TrainingRank.objects.create(user=request.user, training_id=training,
+                                            statistics={
+                                                "statistics": default_statistics(),
+                                                "score": 0
+                                            })
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

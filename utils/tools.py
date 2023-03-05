@@ -6,7 +6,6 @@ from django.db.models import Q
 
 from utils.judger.judgeclient import JudgeClient
 
-
 TEMPLATE_BASE = """//PREPEND BEGIN
 {prepend}
 //PREPEND END
@@ -98,10 +97,14 @@ def read_test_case(test_case):
     return input_list, output_list
 
 
-def do_before(user_id, problem_id, status):
+def do_before(user_id, problem_id, status='Accepted', training=True, train_id=None):
     from submission.models import Submission
-    return Submission.objects.filter(Q(created_by=user_id) & Q(problem=problem_id) & Q(status=status)
-                                     & Q(training__isnull=True)).count() > 1
+    if train_id:
+        return Submission.objects.filter(Q(created_by=user_id) & Q(problem=problem_id) & Q(status=status)
+                                         & Q(training=train_id)).count() > 1
+    else:
+        return Submission.objects.filter(Q(created_by=user_id) & Q(problem=problem_id) & Q(status=status)
+                                         & Q(training__isnull=training)).count() > 1
 
 
 def get_languages():

@@ -29,6 +29,7 @@ class Submission(models.Model):
     status = models.CharField(_("submitted status"), max_length=20, choices=Status.choices)
     created_time = models.DateTimeField(_("submitted time"), auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    submit_ip = models.GenericIPAddressField(_("submit ip addr"))
 
     @staticmethod
     def translate_status(status_dict):

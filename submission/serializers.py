@@ -17,7 +17,8 @@ class BaseSubmissionSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({"detail": "language does not support"})
 
         if training := attrs.get('training'):
-            training_verify_set = cache.get('training_verify', set())
+            training_verify_set = cache.get('training_verify_' + str(self.context.get('request').data.get('training')),
+                                            set())
             if self.context.get('request').user.username not in training_verify_set:
                 raise serializers.ValidationError({"detail": "you do not have permission to access this training"})
             if datetime.now() > training.end_time:
@@ -26,7 +27,7 @@ class BaseSubmissionSerializers(serializers.ModelSerializer):
                 raise serializers.ValidationError({"detail": "training has not started"})
 
             try:
-                training.problems.get(problem=problem)
+                training.problems.get(pk=problem.id)
             except Problem.DoesNotExist:
                 raise serializers.ValidationError({"detail": "problem not in this training"})
 
@@ -52,10 +53,10 @@ class BaseSubmissionSerializers(serializers.ModelSerializer):
     class Meta:
         model = Submission
         fields = '__all__'
-        read_only_fields = ['status', 'created_time', 'created_by']
+        read_only_fields = ['status', 'created_time', 'created_by', 'submit_ip']
 
 
 class SubmissionListSerializers(BaseSubmissionSerializers):
     class Meta:
         model = Submission
-        exclude = ['token', 'code']
+        exclude = ['token', 'code', 'submit_ip']

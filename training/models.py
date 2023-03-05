@@ -62,11 +62,27 @@ class TrainingRank(models.Model):
     training = models.ForeignKey(Training, on_delete=models.CASCADE)
     '''
     {
-        Problem ID: True | False | None
+        "Problem ID": {
+            "Test_case_order": True | False | None
+        }
 
-        1: True,
-        2: False,
-        3: None,
+        "1": {
+            "0": True,
+            "1": False,
+            "2": None,
+        }
+        "2": {
+            "0": True,
+            "1": False,
+            "2": None,
+        },
+        "3": {
+            "0": True,
+            "1": False,
+            "2": None,
+        },
+        
+        "statistics": {...}
 
         "score": 10
     }

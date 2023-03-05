@@ -3,9 +3,8 @@ from rest_framework import generics
 from rest_framework import status, permissions, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from organization.models import User, Group, UserProfile
+from organization.models import User, Group
 from organization.serializers import RegisterSerializer, NormalUserSerializer, UserRankListSerializer, GroupsSerializer
 from utils.pagination import NumPagination
 
@@ -46,21 +45,27 @@ class UserRetrieveUpdateView(generics.RetrieveUpdateAPIView):
         return super().update(request, *args, **kwargs)
 
 
-class UserRankList(APIView):
+class UserRankList(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    serializer_class = UserRankListSerializer
+    pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['=user__username', 'group__name']
-    ordering_fields = ['accepted_num', 'commit_num']
+    search_fields = ["=username", "profile__group__name"]
+    ordering_fields = ["accepted_num", "commit_num"]
 
-    def filter_queryset(self, queryset):
-        for backend in list(self.filter_backends):
-            queryset = backend().filter_queryset(self.request, queryset, self)
-        return queryset
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(
+            User.objects.all().order_by(
+                "-profile__statistics__Accepted",
+                "profile__statistics__Commit",
+                "username"
+            )
+        )
+        page = self.paginate_queryset(queryset)
 
-    def get(self, request):
-        users = self.filter_queryset(queryset=UserProfile.objects.filter(commit_num__gt=0)
-                                     .order_by('-accepted_num', 'commit_num'))
-        page = NumPagination()
-        page_user = page.paginate_queryset(queryset=users, request=request, view=self)
-        serializer = UserRankListSerializer(instance=page_user, many=True)
-        return page.get_paginated_response(serializer.data)
+        if page is not None:
+            serializer = self.get_serializer(instance=page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

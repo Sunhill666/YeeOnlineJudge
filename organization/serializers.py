@@ -1,6 +1,5 @@
 import re
 
-from django.db.models import Q
 from rest_framework import serializers
 
 from .models import User, Group, UserProfile
@@ -94,6 +93,12 @@ class GeneralUserProfileListSerializer(BaseUserProfileSerializer):
         fields = ['group', 'avatar']
 
 
+class UserProfileRankListSerializer(BaseUserProfileSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['group', 'avatar', 'statistics']
+
+
 # 用户序列化器
 class AdminUserSerializer(BaseUserSerializer):
     profile = AdminUserProfileSerializer()
@@ -168,18 +173,9 @@ class RegisterSerializer(serializers.Serializer):
         raise serializers.ValidationError({"detail": "Update operation cannot doing in this serializer"})
 
 
-class UserRankListSerializer(BaseUserProfileSerializer):
-    group = serializers.StringRelatedField()
-    user = serializers.StringRelatedField()
-
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        rank = UserProfile.objects.all().filter(Q(accepted_num__gte=instance.accepted_num) &
-                                                Q(commit_num__lte=instance.commit_num)).count()
-        ret.update({"rank": rank})
-        return ret
+class UserRankListSerializer(BaseUserSerializer):
+    profile = UserProfileRankListSerializer(read_only=True)
 
     class Meta:
-        model = UserProfile
-        fields = ['user_id', 'user', 'avatar', 'accepted_num', 'commit_num', 'group']
-        read_only_fields = ['accepted_num', 'commit_num', 'avatar']
+        model = User
+        fields = ['username', 'nickname', 'profile']
