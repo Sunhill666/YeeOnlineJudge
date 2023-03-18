@@ -35,7 +35,6 @@ class Problem(models.Model):
     class Mode(models.TextChoices):
         OI = 'OI', _('OI')
         ACM = 'ACM', _('ACM')
-        FUNC = 'Func', _('Functional')
 
     title = models.CharField(_("problem name"), max_length=30)
     desc = models.TextField(_("problem description"))
@@ -77,18 +76,18 @@ class Problem(models.Model):
     '''
     In ACM and OI mode:
     [
-        # test_case #1
+        // test_case #1
         {
             "input_name": "1.in",
             "output_name": "1.out",
-            "point": 50 # ignore in ACM mode
+            "point": 50 // ignore in ACM mode
         },
 
-        # test_case #2
+        // test_case #2
         {
             "input_name": "2.in",
             "output_name": "2.out",
-            "point": 50 # ignore in ACM mode
+            "point": 50 // ignore in ACM mode
         }
     ]
     '''

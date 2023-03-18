@@ -163,7 +163,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv('REDIS_HOST'),
+        "LOCATION": f"redis://{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": os.getenv('REDIS_PASSWORD')
@@ -172,8 +172,8 @@ CACHES = {
 }
 
 # celery 配置
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
+CELERY_BROKER_URL = f"redis://:{os.getenv('REDIS_PASSWORD')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/3"
+CELERY_RESULT_BACKEND = f"redis://:{os.getenv('REDIS_PASSWORD')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/4"
 # 可接受的内容格式
 CELERY_ACCEPT_CONTENT = ["json"]
 # 任务序列化数据格式
@@ -184,10 +184,10 @@ CELERYD_TIME_LIMIT = 60
 CELERY_TASK_TRACK_STARTED = True
 
 # 判题机认证与授权Header
-AUTHN_HEADER = os.getenv('AUTHN_HEADER')
+AUTHN_HEADER = os.getenv('AUTHN_HEADER', 'X-Auth-Token')
 AUTHN_TOKEN = os.getenv('AUTHN_TOKEN')
 
-AUTHZ_HEADER = os.getenv('AUTHZ_HEADER')
+AUTHZ_HEADER = os.getenv('AUTHZ_HEADER', 'X-Auth-User')
 AUTHZ_TOKEN = os.getenv('AUTHZ_TOKEN')
 
 # 判题机

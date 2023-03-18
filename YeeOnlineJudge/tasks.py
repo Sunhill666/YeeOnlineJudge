@@ -71,6 +71,7 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
 
     if training:
         work = process_training.delay(submission_id, statistics)
+        # 等待排名更新操作完成
         while not work.ready():
             sleep(0.1)
         process_statistics.delay(submission_id, "Training", training)
@@ -109,7 +110,7 @@ def process_statistics(submission_id, process_type, training=None):
         })
         problem.statistics = statistics
         problem.save()
-    else:
+    elif process_type == "Training":
         train = submit.training
         train_rank = train.trainingrank_set.get(user=submit.created_by)
         statistics = train_rank.statistics.get("statistics")
@@ -123,6 +124,8 @@ def process_statistics(submission_id, process_type, training=None):
         })
         train_rank.statistics.update(statistics=statistics)
         train_rank.save()
+    else:
+        return "process_type 有误"
     return {process_type: statistics}
 
 
