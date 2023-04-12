@@ -72,8 +72,9 @@ class BaseTrainingSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def validate(self, attrs):
-        if attrs['start_time'] > attrs['end_time']:
-            raise serializers.ValidationError({"detail": "end time should be later than start time"})
+        if attrs.get('start_time'):
+            if attrs['start_time'] > attrs['end_time']:
+                raise serializers.ValidationError({"detail": "end time should be later than start time"})
         return attrs
 
     class Meta:
@@ -92,19 +93,16 @@ class BaseLearningPlanSerializer(serializers.ModelSerializer):
         return ret
 
     def validate(self, attrs):
-        if attrs.get('stage') is None:
-            raise serializers.ValidationError({"detail": "stage can not be null"})
-        if attrs.get('ordering') is None:
-            raise serializers.ValidationError({"detail": "ordering can not be null"})
-        stage = attrs['stage']
-        order = attrs['ordering']
-        if len(stage) != len(order):
-            raise serializers.ValidationError({"detail": "stage and ordering must match"})
-        for i in stage:
-            try:
-                order.index(i.id)
-            except ValueError:
+        if attrs.get('stage') and attrs.get('ordering'):
+            stage = attrs['stage']
+            order = attrs['ordering']
+            if len(stage) != len(order):
                 raise serializers.ValidationError({"detail": "stage and ordering must match"})
+            for i in stage:
+                try:
+                    order.index(i.id)
+                except ValueError:
+                    raise serializers.ValidationError({"detail": "stage and ordering must match"})
         return attrs
 
     class Meta:

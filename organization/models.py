@@ -114,7 +114,7 @@ class UserProfile(models.Model):
     }
     '''
     statistics = models.JSONField(_("problem statistics"), default=default_statistics)
-    avatar = models.ImageField(upload_to='avatar/', default=f"avatar/default.jpg", null=True)
+    avatar = models.ImageField(upload_to='avatar/', default="avatar/default.jpg")
     bio = models.CharField(_('bio'), max_length=50, blank=True, null=True)
 
     def __str__(self):

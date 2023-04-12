@@ -113,7 +113,7 @@ class NormalUserSerializer(BaseUserSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'nickname', 'real_name', 'email', 'date_joined', 'profile', 'password']
+        fields = ['username', 'nickname', 'real_name', 'email', 'date_joined', 'profile']
         read_only_fields = ['username']
 
 
@@ -130,11 +130,10 @@ class RegisterSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=13, min_length=8)
     nickname = serializers.CharField(max_length=25)
     password = serializers.CharField(max_length=128)
-    first_name = serializers.CharField(max_length=10)
-    last_name = serializers.CharField(max_length=5)
+    real_name = serializers.CharField(max_length=25)
     email = serializers.EmailField()
     group = serializers.CharField(max_length=25)
-    avatar = serializers.ImageField(use_url=True, allow_empty_file=True, required=False)
+    avatar = serializers.ImageField(use_url=True, allow_empty_file=True, required=False, default="avatar/default.jpg")
     bio = serializers.CharField(max_length=50, allow_blank=True, allow_null=True, required=False)
 
     def to_representation(self, instance):
@@ -158,7 +157,11 @@ class RegisterSerializer(serializers.Serializer):
                 {"detail": f"this username '{value}' is invalid, the username may contain only numbers and length in "
                            f"8-13"}
             )
-        return value
+        try:
+            User.objects.get(username=value)
+        except User.DoesNotExist:
+            return value
+        raise serializers.ValidationError({"detail": f"'{value}' is already exist"})
 
     def create(self, validated_data):
         group_name = validated_data.pop('group')

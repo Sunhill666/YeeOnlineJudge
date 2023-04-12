@@ -81,8 +81,8 @@ class ContestSubmitList(generics.ListAPIView):
     serializer_class = SubmissionListSerializers
     pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['title']
-    ordering_fields = ['start_time']
+    search_fields = ['created_by__username', 'problem__title']
+    ordering_fields = ['created_time']
 
     def list(self, request, *args, **kwargs):
         training_verify_set = cache.get('training_verify_' + str(kwargs.get('pk')), set())

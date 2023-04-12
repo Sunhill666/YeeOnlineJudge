@@ -51,7 +51,7 @@ class UserRankList(generics.ListAPIView):
     pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["=username", "profile__group__name"]
-    ordering_fields = ["accepted_num", "commit_num"]
+    ordering_fields = ["profile__statistics__Accepted", "profile__statistics__Commit"]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(

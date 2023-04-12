@@ -43,9 +43,18 @@ class BaseProblemSerializer(serializers.ModelSerializer):
         return data
 
     def validate(self, data):
-        for i in data.get('languages'):
-            if i not in get_languages().keys():
-                raise serializers.ValidationError({"detail": "specify language does not support"})
+        if time_limit := data.get('time_limit'):
+            if time_limit > 5000:
+                raise serializers.ValidationError({"detail": "time_limit less than or equal to 5000"})
+
+        if memory_limit := data.get('memory_limit'):
+            if memory_limit > 128:
+                raise serializers.ValidationError({"detail": "memory_limit less than or equal to 128"})
+
+        if data.get('languages'):
+            for i in data.get('languages'):
+                if i not in get_languages().keys():
+                    raise serializers.ValidationError({"detail": "specify language does not support"})
 
         if template := data.get('template'):
             for key in template.keys():
