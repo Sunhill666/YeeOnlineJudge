@@ -1,5 +1,7 @@
 import base64
 
+import requests
+
 from utils.judger.judgeclient import JudgeClient
 
 
@@ -101,7 +103,11 @@ class Submission:
                 data.update({field: self.__getattribute__(field)})
 
         r = client.session.post(f"{client.endpoint}/submissions/", headers=headers, params=params, json=data)
-        r.raise_for_status()
+        try:
+            r.raise_for_status()
+        except requests.HTTPError:
+            print(data.get('source_code'))
+            print(r.json())
 
         json = r.json()
         self.set_properties(dict(json))

@@ -30,6 +30,7 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
         statistics = {}
         test_case_status = {}
     # 将一道题目中的每个测试样例和提交的代码送去判题机
+    time, memory = 0, 0
     for index, val in enumerate(zip(stdin_list, expected_output_list)):
         stdin = val[0]
         expected_output = val[1]
@@ -42,7 +43,11 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
             memory_limit=problem.memory_limit * 1024,
             wait=True
         )
-        token_list.append(sub.token)
+        if not sub.time or not sub.memory:
+            print(f"此提交用时：{sub.time}")
+            print(f"此提交消耗内存：{sub.memory}")
+        time += float(sub.time) if sub.time else 0.0
+        memory += int(sub.memory) if sub.memory else 0
         index = str(index)
         if problem.mode == 'OI' and (not wrong_flag):
             submit.status = Submission.translate_status(sub.status)
@@ -52,6 +57,7 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
             # 之前做对不更新
             if not test_case_status.get(index):
                 test_case_status.update({index: False})
+            token_list.append(sub.token)
             wrong_flag = True
         elif sub.status.get('id') == 3:
             test_case_status.update({index: True})
@@ -65,6 +71,8 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
                 break
 
     submit.token = token_list
+    submit.time = time * 1000
+    submit.memory = memory
     submit.save()
 
     statistics.update({str(problem_id): test_case_status})

@@ -2,6 +2,9 @@ import re
 
 from rest_framework import serializers
 
+from submission.models import Submission
+from submission.serializers import SubmissionListSerializers
+
 from .models import User, Group, UserProfile
 
 
@@ -111,9 +114,16 @@ class AdminUserSerializer(BaseUserSerializer):
 class NormalUserSerializer(BaseUserSerializer):
     profile = NormalUserProfileSerializer()
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        submits = Submission.objects.filter(created_by=instance, training__isnull=True).order_by('-created_time')[:10]
+        submits_data = SubmissionListSerializers(instance=submits, many=True).data
+        ret.update(recent_submit=submits_data)
+        return ret
+
     class Meta:
         model = User
-        fields = ['username', 'nickname', 'real_name', 'email', 'date_joined', 'profile']
+        fields = ['username', 'nickname', 'real_name', 'email', 'date_joined', 'profile', 'last_login_ip']
         read_only_fields = ['username']
 
 

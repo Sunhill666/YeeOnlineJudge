@@ -26,6 +26,8 @@ class Submission(models.Model):
     code = models.TextField(_("submitted code"))
     language_id = models.IntegerField(_("submitted language"))
     training = models.ForeignKey(Training, on_delete=models.CASCADE, null=True)
+    time = models.IntegerField(_("process time in ms"), null=True)
+    memory = models.IntegerField(_("process memory in kb"), null=True)
     status = models.CharField(_("submitted status"), max_length=20, choices=Status.choices)
     created_time = models.DateTimeField(_("submitted time"), auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)

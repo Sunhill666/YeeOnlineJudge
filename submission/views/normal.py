@@ -13,7 +13,7 @@ from utils.tools import get_languages, prase_template, default_statistics
 
 
 class SubmissionListCreateView(generics.ListCreateAPIView):
-    queryset = Submission.objects.filter(training__isnull=True).order_by('id')
+    queryset = Submission.objects.filter(training__isnull=True).order_by('-created_time')
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -88,3 +88,8 @@ class SubmissionRetrieveView(generics.RetrieveAPIView):
 @permission_classes([permissions.AllowAny])
 def language_list(request):
     return Response(get_languages(), status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def get_submit_details(request, token):
+    return Response(submission.get(token), status=status.HTTP_200_OK)
