@@ -4,9 +4,7 @@ WORKDIR /project
 ADD . /project
 
 RUN mkdir -p /etc/default && \
-    addgroup celery && adduser celery -G celery -s /bin/sh -D && \
-    mkdir -p /var/log/celery/ && chown celery:celery /var/log/celery/ && \
-    mkdir -p /var/run/celery/ && chown celery:celery /var/run/celery/
+    mkdir -p /var/log/celery/ && mkdir -p /var/run/celery/
 
 COPY ./celeryd /etc/init.d/celeryd
 COPY ./celeryd.conf /etc/default/celeryd

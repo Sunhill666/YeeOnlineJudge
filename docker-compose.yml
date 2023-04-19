@@ -1,0 +1,40 @@
+version: "3"
+services:
+  judge_db:
+    image: postgres:14.5-alpine
+    container_name: oj_postgres
+    restart: always
+    volumes:
+      - ./oj_data/postgres/data:/var/lib/postgresql/data
+    env_file: yeeoj.conf
+    ports:
+      - "0.0.0.0:5423:5432"
+
+  judge_redis:
+    image: redis:7.0-alpine
+    container_name: oj_redis
+    command: redis-server --requirepass judgeme_114514!
+    volumes:
+      - ./oj_data/redis/data:/data
+    restart: always
+    ports:
+      - "0.0.0.0:6379:6379"
+
+  oj_server:
+    image: registry.cn-hangzhou.aliyuncs.com/senpai/yeeoj:latest
+    container_name: oj_backend
+    restart: always
+    env_file: yeeoj.conf
+    depends_on:
+      - judge_db
+      - judge_redis
+    volumes:
+      - ./oj_data/oj_serve/upload:/project/upload
+      - ./oj_data/oj_serve/log:/var/log/celery
+    ports:
+      - "0.0.0.0:8000:8000"
+
+networks:
+  default:
+    name: judge0-v1130_default
+    external: true
