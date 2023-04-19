@@ -1,4 +1,6 @@
 #!/bin/sh
+/etc/init.d/celeryd start
+
 python manage.py makemigrations
 python manage.py migrate
 python manage.py inital_user
