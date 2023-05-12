@@ -17,7 +17,7 @@ class ProblemSetViewSet(viewsets.ModelViewSet):
 
 
 class TrainingListCreateView(generics.ListCreateAPIView):
-    queryset = Training.objects.all()
+    queryset = Training.objects.all().order_by('-start_time')
     pagination_class = NumPagination
     permission_classes = [permissions.IsStaff]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]

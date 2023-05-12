@@ -10,7 +10,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from organization import permissions
 from organization.models import User, Group, UserProfile
-from organization.serializers import AdminUserSerializer, GroupsSerializer, GeneralUserListSerializer
+from organization.serializers import AdminUserSerializer, GroupAllSerializer, GroupsSerializer, GeneralUserListSerializer, UserAllSerializer
 from utils.pagination import NumPagination
 from utils.tools import get_available_username, get_random_string
 
@@ -42,6 +42,22 @@ class UserRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.IsSuperAdmin]
     serializer_class = AdminUserSerializer
+
+
+@api_view(["get"])
+@permission_classes([permissions.IsStaff])
+def special_user_list(request):
+    queryset = User.objects.all()
+    serializer = UserAllSerializer(queryset, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["get"])
+@permission_classes([permissions.IsStaff])
+def special_group_list(request):
+    queryset = Group.objects.all()
+    serializer = GroupAllSerializer(queryset, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["post"])

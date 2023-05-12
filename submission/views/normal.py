@@ -1,3 +1,4 @@
+from django.db.models import Case, Count, When
 from rest_framework import status, permissions, filters, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -13,11 +14,13 @@ from utils.tools import get_languages, prase_template, default_statistics
 
 
 class SubmissionListCreateView(generics.ListCreateAPIView):
-    queryset = Submission.objects.filter(training__isnull=True).order_by('-created_time')
+    queryset = Submission.objects.filter(training__isnull=True).annotate(
+        sticky_top=Count(Case(When(status="Processing", then=1)))
+    ).order_by("-sticky_top", "-created_time")
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['created_by__username', 'problem__title']
+    search_fields = ['=status', 'created_by__username', 'problem__title']
     ordering_fields = ['created_time']
 
     def get_serializer_class(self):

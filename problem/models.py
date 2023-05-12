@@ -71,7 +71,7 @@ class Problem(models.Model):
     # MB
     memory_limit = models.IntegerField(_("memory limit"))
     difficulty = models.CharField(_("difficulty"), choices=Difficulty.choices, max_length=6)
-    mode = models.CharField(_("problem mode"), choices=Mode.choices, max_length=4)
+    mode = models.CharField(_("problem mode"), choices=Mode.choices, max_length=4, default=Mode.ACM)
     test_case = models.ForeignKey(TestCase, on_delete=models.PROTECT, related_name="cases")
     '''
     In ACM and OI mode:

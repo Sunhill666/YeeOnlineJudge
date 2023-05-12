@@ -127,7 +127,8 @@ def process_statistics(submission_id, process_type, training=None):
         statistics.update({
             submit.status: Submission.objects.filter(
                 Q(training=training) &
-                Q(status=submit.status)
+                Q(status=submit.status) &
+                Q(created_by=submit.created_by)
             ).distinct("problem").count()
         })
         train_rank.statistics.update(statistics=statistics)

@@ -1,9 +1,11 @@
 from django.contrib.auth.hashers import make_password
+from django.core.cache import cache
 from rest_framework import serializers
 
 from announcement.models import Announcement
 from announcement.serializers import NormalAnnouncementDetailSerializer
 from organization.models import Group, User
+from organization.serializers import GroupAllSerializer, UserAllSerializer
 from problem.serializers import ProblemListSerializer
 from training.models import Training, TrainingRank, ProblemSet, LearningPlan
 
@@ -23,8 +25,8 @@ class BaseProblemSetSerializer(serializers.ModelSerializer):
 
 class BaseTrainingSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, write_only=True, required=False)
-    group = serializers.StringRelatedField(many=True, required=False)
-    user = serializers.StringRelatedField(many=True, required=False)
+    group = GroupAllSerializer(many=True, required=False)
+    user = UserAllSerializer(many=True, required=False)
     create_by = serializers.StringRelatedField()
 
     def to_internal_value(self, data):
@@ -47,6 +49,17 @@ class BaseTrainingSerializer(serializers.ModelSerializer):
             data.update(user=User.objects.filter(username__in=users))
         else:
             data.update(user=User.objects.none())
+
+        data.update(mode="ACM")
+
+        if groups := data.get('group') and len(groups) != 0:
+            data.update(is_open=True)
+        elif users := data.get('user') and len(users) != 0:
+            data.update(is_open=True)
+        elif data.get('password'):
+            data.update(is_open=True)
+        else:
+            data.update(is_open=False)
 
         return data
 
@@ -123,6 +136,17 @@ class BaseContestRankSerializer(serializers.ModelSerializer):
 
 # 训练序列化器
 class NormalDetailTrainingSerializer(BaseTrainingSerializer):
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        pk = self.context.get('view').kwargs.get('pk')
+        username = self.context.get('request').user.username
+        training_verify_set = cache.get('training_verify_' + pk, set())
+        if username in training_verify_set:
+            ret.update(joined=True)
+        else:
+            ret.update(joined=False)
+        return ret
+
     class Meta:
         model = Training
         fields = '__all__'

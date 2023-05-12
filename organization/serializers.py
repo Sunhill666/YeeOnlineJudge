@@ -44,6 +44,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 class BaseUserProfileSerializer(serializers.ModelSerializer):
     group = BaseGroupsSerialize()
+    avatar = serializers.ImageField(use_url=False)
 
     def to_internal_value(self, data):
         if group_name := data.get('group'):
@@ -53,6 +54,11 @@ class BaseUserProfileSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"detail": f"'{group_name}' group does not exist"})
             data['group'] = group
         return data
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret.update(avatar="/media/" + ret.get('avatar'))
+        return ret
 
     class Meta:
         model = UserProfile
@@ -75,6 +81,17 @@ class GroupsSerializer(BaseGroupsSerialize):
     class Meta:
         model = Group
         fields = '__all__'
+
+
+class GroupAllSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        return {"id": ret.get('id'), "name": ret.get('name')}
+
+    class Meta:
+        model = Group
+        fields = ['id', 'name']
+        read_only_fields = ['id', 'name']
 
 
 # 用户资料序列化器
@@ -133,6 +150,17 @@ class GeneralUserListSerializer(BaseUserSerializer):
     class Meta:
         model = User
         fields = ['username', 'nickname', 'email', 'user_role', 'is_staff', 'is_superuser', 'profile']
+
+
+class UserAllSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        return {"username": ret.get('username'), "real_name": ret.get('real_name')}
+
+    class Meta:
+        model = User
+        fields = ['username', 'real_name']
+        read_only_fields = ['username', 'real_name']
 
 
 # 注册序列化器

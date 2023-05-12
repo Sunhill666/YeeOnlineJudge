@@ -36,10 +36,16 @@ class BaseProblemSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({"detail": f"tag id '{tag_id}' does not exists"})
             tags = ProblemTag.objects.filter(id__in=tags_id)
             data.update(tags=tags)
+        # OI 这块先做默认 ACM，分数默认 100
         if data.get('mode') == 'ACM':
             for point in data.get('point'):
-                if not point.__contains__('point'):
-                    point.update(point="100")
+                # if not point.__contains__('point'):
+                point.update(point="100")
+        else:
+            data.update(mode="ACM")
+            for point in data.get('point'):
+                # if not point.__contains__('point'):
+                point.update(point="100")
         return data
 
     def validate(self, data):
@@ -99,6 +105,13 @@ class BaseProblemSerializer(serializers.ModelSerializer):
 
 
 class BaseTestCaseSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(use_url=False)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret.update(file="/media/" + ret.get('file'))
+        return ret
+
     def validate(self, attrs):
         with ZipFile(attrs.get('file')) as f:
             namelist = f.namelist()

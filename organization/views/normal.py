@@ -57,6 +57,7 @@ class UserRankList(generics.ListAPIView):
         queryset = self.filter_queryset(
             User.objects.all().order_by(
                 "-profile__statistics__Accepted",
+                "profile__statistics__Wrong Answer"
                 "profile__statistics__Commit",
                 "username"
             )

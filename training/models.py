@@ -36,7 +36,7 @@ class Training(TrainingBase):
     start_time = models.DateTimeField(_("start time"))
     end_time = models.DateTimeField(_("end time"))
     problems = models.ManyToManyField(Problem, related_name='train_problem')
-    mode = models.CharField(_("training mode"), choices=Problem.Mode.choices, max_length=4)
+    mode = models.CharField(_("training mode"), choices=Problem.Mode.choices, max_length=4, default=Problem.Mode.ACM)
 
     group = models.ManyToManyField(Group, related_name='train_groups')
     user = models.ManyToManyField(User, related_name='train_users')
