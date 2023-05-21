@@ -21,7 +21,7 @@ class TrainingBase(models.Model):
     title = models.CharField(_("title"), max_length=25)
     description = models.TextField(_("description"), max_length=100)
     created_time = models.DateTimeField(_("created time"), auto_now_add=True)
-    is_open = models.BooleanField(_("open whether or not"), default=False)
+    is_open = models.BooleanField(_("open whether or not"), default=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='%(class)s_creator')
 
     def __str__(self):
@@ -37,6 +37,7 @@ class Training(TrainingBase):
     end_time = models.DateTimeField(_("end time"))
     problems = models.ManyToManyField(Problem, related_name='train_problem')
     mode = models.CharField(_("training mode"), choices=Problem.Mode.choices, max_length=4, default=Problem.Mode.ACM)
+    point = models.JSONField(_("each problem point"))
 
     group = models.ManyToManyField(Group, related_name='train_groups')
     user = models.ManyToManyField(User, related_name='train_users')
@@ -62,25 +63,7 @@ class TrainingRank(models.Model):
     training = models.ForeignKey(Training, on_delete=models.CASCADE)
     '''
     {
-        "Problem ID": {
-            "Test_case_order": True | False | None
-        }
-
-        "1": {
-            "0": True,
-            "1": False,
-            "2": None,
-        }
-        "2": {
-            "0": True,
-            "1": False,
-            "2": None,
-        },
-        "3": {
-            "0": True,
-            "1": False,
-            "2": None,
-        },
+        "Problem ID": True | False | None
         
         "statistics": {...}
 

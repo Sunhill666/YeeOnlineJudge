@@ -1,12 +1,13 @@
+from django.db.models import Q
 from rest_framework import generics, filters, permissions
 
 from utils.pagination import NumPagination
-from ..models import Announcement
-from ..serializers import AnnouncementListSerializer, NormalAnnouncementDetailSerializer
+from announcement.models import Announcement
+from announcement.serializers import AnnouncementListSerializer, NormalAnnouncementDetailSerializer
 
 
 class AnnouncementListView(generics.ListAPIView):
-    queryset = Announcement.objects.filter(training__isnull=True)
+    queryset = Announcement.objects.filter(Q(visible=True) & Q(training__isnull=True))
     serializer_class = AnnouncementListSerializer
     pagination_class = NumPagination
     permission_classes = [permissions.AllowAny]
@@ -16,6 +17,6 @@ class AnnouncementListView(generics.ListAPIView):
 
 
 class AnnouncementRetrieveView(generics.RetrieveAPIView):
-    queryset = Announcement.objects.filter(training__isnull=True)
+    queryset = Announcement.objects.filter(Q(visible=True) & Q(training__isnull=True))
     serializer_class = NormalAnnouncementDetailSerializer
     permission_classes = [permissions.AllowAny]

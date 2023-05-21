@@ -26,6 +26,14 @@ class TestCase(models.Model):
         ordering = ['id']
 
 
+class Picture(models.Model):
+    pic = models.ImageField(upload_to='pics/')
+
+    class Meta:
+        db_table = "picture"
+        ordering = ['id']
+
+
 class Problem(models.Model):
     class Difficulty(models.TextChoices):
         EAZY = 'Easy', _('easy')

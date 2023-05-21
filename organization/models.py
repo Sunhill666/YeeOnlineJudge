@@ -68,7 +68,7 @@ class User(AbstractBaseUser):
 
     username = models.CharField(
         _('User ID'),
-        max_length=13,
+        max_length=20,
         unique=True,
         primary_key=True,
         validators=[username_validator],

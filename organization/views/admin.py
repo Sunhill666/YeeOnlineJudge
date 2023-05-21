@@ -1,8 +1,8 @@
 import csv
 
 from django.http import HttpResponse
+from django.utils import timezone
 from rest_framework import generics
-from rest_framework import permissions as ps
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -29,7 +29,7 @@ class UserListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsSuperAdmin]
     pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['username', 'nickname', 'email', 'user_role', 'is_staff', 'is_superuser']
+    search_fields = ['username', 'nickname', 'email', 'user_role', 'is_staff', 'is_superuser', 'profile__group__name']
     ordering_fields = ['username', 'date_joined']
 
     def get_serializer_class(self):
@@ -45,7 +45,7 @@ class UserRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @api_view(["get"])
-@permission_classes([permissions.IsStaff])
+@permission_classes([permissions.IsSuperAdmin])
 def special_user_list(request):
     queryset = User.objects.all()
     serializer = UserAllSerializer(queryset, many=True)
@@ -53,7 +53,7 @@ def special_user_list(request):
 
 
 @api_view(["get"])
-@permission_classes([permissions.IsStaff])
+@permission_classes([permissions.IsSuperAdmin])
 def special_group_list(request):
     queryset = Group.objects.all()
     serializer = GroupAllSerializer(queryset, many=True)
@@ -61,7 +61,7 @@ def special_group_list(request):
 
 
 @api_view(["post"])
-@permission_classes([ps.AllowAny])
+@permission_classes([permissions.IsSuperAdmin])
 def batch_register(request):
     username_prefix = request.data.get('prefix', "")
     username_suffix = request.data.get('suffix', "")
@@ -89,7 +89,7 @@ def batch_register(request):
     for i in username_list:
         password = get_random_string() if random_pwd else request.data.get('password')
         user = User.objects.create_user(username=i, password=password,
-                                        real_name="user batch", email="batch@default.com")
+                                        real_name="user batch", email="batch@default.com", date_joined=timezone.now())
         UserProfile.objects.create(user=user, group=batch_group[0])
         user_dict.update({i: password})
 

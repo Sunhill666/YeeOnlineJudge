@@ -10,7 +10,7 @@ from utils.pagination import NumPagination
 class ProblemSetViewSet(viewsets.ModelViewSet):
     queryset = ProblemSet.objects.all()
     pagination_class = NumPagination
-    permission_classes = [permissions.IsStaff]
+    permission_classes = [permissions.IsSuperAdmin]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     serializer_class = BaseProblemSetSerializer
@@ -19,7 +19,7 @@ class ProblemSetViewSet(viewsets.ModelViewSet):
 class TrainingListCreateView(generics.ListCreateAPIView):
     queryset = Training.objects.all().order_by('-start_time')
     pagination_class = NumPagination
-    permission_classes = [permissions.IsStaff]
+    permission_classes = [permissions.IsSuperAdmin]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
     ordering_fields = ['created_time', 'start_time']
@@ -36,14 +36,14 @@ class TrainingListCreateView(generics.ListCreateAPIView):
 class TrainingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Training.objects.all()
     serializer_class = BaseTrainingSerializer
-    permission_classes = [permissions.IsStaff]
+    permission_classes = [permissions.IsSuperAdmin]
 
 
 class LearningPlanListCreateView(generics.ListCreateAPIView):
     queryset = LearningPlan.objects.all()
     serializer_class = BaseLearningPlanSerializer
     pagination_class = NumPagination
-    permission_classes = [permissions.IsStaff]
+    permission_classes = [permissions.IsSuperAdmin]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
     ordering_fields = ['created_time']
@@ -52,4 +52,4 @@ class LearningPlanListCreateView(generics.ListCreateAPIView):
 class LearningPlanRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = LearningPlan.objects.all()
     serializer_class = BaseLearningPlanSerializer
-    permission_classes = [permissions.IsStaff]
+    permission_classes = [permissions.IsSuperAdmin]

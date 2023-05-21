@@ -4,7 +4,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from rest_framework import serializers
 
-from problem.models import Problem, ProblemTag, TestCase
+from problem.models import Picture, Problem, ProblemTag, TestCase
 from submission.models import Submission
 from utils.tools import get_languages, prase_template
 
@@ -24,6 +24,19 @@ class BaseProblemTagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class BasePictureSerializer(serializers.ModelSerializer):
+    pic = serializers.ImageField(use_url=False)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret.update(pic="/media/" + ret.get('pic'))
+        return ret
+
+    class Meta:
+        model = Picture
+        fields = '__all__'
+
+
 class BaseProblemSerializer(serializers.ModelSerializer):
     tags = BaseProblemTagSerializer(many=True)
 
@@ -37,24 +50,33 @@ class BaseProblemSerializer(serializers.ModelSerializer):
             tags = ProblemTag.objects.filter(id__in=tags_id)
             data.update(tags=tags)
         # OI 这块先做默认 ACM，分数默认 100
-        if data.get('mode') == 'ACM':
-            for point in data.get('point'):
-                # if not point.__contains__('point'):
-                point.update(point="100")
-        else:
-            data.update(mode="ACM")
-            for point in data.get('point'):
-                # if not point.__contains__('point'):
-                point.update(point="100")
+        # if data.get('mode') == 'ACM':
+        #     for point in data.get('point'):
+        #         # if not point.__contains__('point'):
+        #         point.update(point="100")
+        # else:
+        #     data.update(mode="ACM")
+        #     for point in data.get('point'):
+        #         # if not point.__contains__('point'):
+        #         point.update(point="100")
+        data.update(mode='ACM')
         return data
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if ret.get('mode'):
+            ret.pop('mode')
+        if ret.get('point'):
+            ret.pop('point')
+        return ret
 
     def validate(self, data):
         if time_limit := data.get('time_limit'):
-            if time_limit > 5000:
-                raise serializers.ValidationError({"detail": "time_limit less than or equal to 5000"})
+            if time_limit > 15000:
+                raise serializers.ValidationError({"detail": "time_limit less than or equal to 15000"})
 
         if memory_limit := data.get('memory_limit'):
-            if memory_limit > 128:
+            if memory_limit > 256:
                 raise serializers.ValidationError({"detail": "memory_limit less than or equal to 128"})
 
         if data.get('languages'):
@@ -82,20 +104,26 @@ class BaseProblemSerializer(serializers.ModelSerializer):
             return data
 
         tc_struct = test_case.struct
-        if point := data.get('point'):
-            if len(tc_struct) != len(point):
-                raise serializers.ValidationError("point invalid")
-            for ori, cmp in zip(tc_struct, point):
-                if not (cmp.__contains__('input_name') and cmp.__contains__('output_name')):
-                    raise serializers.ValidationError({"detail": "point invalid"})
-                if data.get('mode') == 'OI' and (not cmp.__contains__('point')):
-                    raise serializers.ValidationError({"detail": "point invalid"})
-                if ori.get('input_name') != cmp.get('input_name'):
-                    raise serializers.ValidationError({"detail": "point invalid"})
-                if ori.get('output_name') != cmp.get('output_name'):
-                    raise serializers.ValidationError({"detail": "point invalid"})
-        else:
-            raise serializers.ValidationError({"detail": "point is null"})
+        default = []
+        for struct in tc_struct:
+            struct.update(point="100")
+            default.append(struct)
+        data.update(point=default)
+        # OI 测试样例赋分
+        # if point := data.get('point'):
+        #     if len(tc_struct) != len(point):
+        #         raise serializers.ValidationError("point invalid")
+        #     for ori, cmp in zip(tc_struct, point):
+        #         if not (cmp.__contains__('input_name') and cmp.__contains__('output_name')):
+        #             raise serializers.ValidationError({"detail": "point invalid"})
+        #         if data.get('mode') == 'OI' and (not cmp.__contains__('point')):
+        #             raise serializers.ValidationError({"detail": "point invalid"})
+        #         if ori.get('input_name') != cmp.get('input_name'):
+        #             raise serializers.ValidationError({"detail": "point invalid"})
+        #         if ori.get('output_name') != cmp.get('output_name'):
+        #             raise serializers.ValidationError({"detail": "point invalid"})
+        # else:
+        #     raise serializers.ValidationError({"detail": "point is null"})
         return data
 
     class Meta:
@@ -192,17 +220,30 @@ class ProblemListSerializer(BaseProblemSerializer):
         ret = super().to_representation(instance)
         user = self.context.get('request').user
         if not isinstance(user, AnonymousUser):
-            if Submission.objects.filter(
-                    Q(created_by=user.username) & Q(status=Submission.Status.ACCEPTED) & Q(problem=instance)
-            ).distinct().count() > 0:
-                done = 1
-            elif Submission.objects.filter(
-                    Q(created_by=user.username) & Q(problem=instance)
-            ).distinct().count() == 0:
-                done = -1
+            qs = Submission.objects.filter(Q(created_by=user.username) & Q(problem=instance))
+            if train_id := self.context.get('training'):
+                train_id = int(train_id)
+                if qs.filter(
+                    Q(status=Submission.Status.ACCEPTED) & Q(training=train_id)
+                ).distinct().count() > 0:
+                    done = 1
+                elif qs.filter(training=train_id).distinct().count() == 0:
+                    done = - 1
+                else:
+                    done = 0
             else:
-                done = 0
-            ret.update(done=done)
+                if qs.filter(status=Submission.Status.ACCEPTED).distinct().count() > 0:
+                    done = 1
+                elif qs.distinct().count() == 0:
+                    done = - 1
+                else:
+                    done = 0
+        else:
+            done = -1
+        ret.update(done=done)
+        
+            
+
         return ret
 
     class Meta:

@@ -1,11 +1,10 @@
 from django.urls import re_path
 
 from training.views.normal import ContestRetrieveView, ContestListView, ContestSubmitList, ContestRankList, \
-    training_verify, LearningPlanListView, LearningPlanRetrieveView
+    LearningPlanListView, LearningPlanRetrieveView
 
 urlpatterns = [
     re_path(r'^training/$', ContestListView.as_view()),
-    re_path(r'^training/verify/$', training_verify),
     re_path(r'^plan/$', LearningPlanListView.as_view()),
     re_path(r'^plan/(?P<pk>\d+)/$', LearningPlanRetrieveView.as_view()),
     re_path(r'^training/(?P<pk>\d+)/$', ContestRetrieveView.as_view()),

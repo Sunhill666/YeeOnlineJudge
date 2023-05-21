@@ -5,11 +5,10 @@ from rest_framework import serializers
 
 from problem.models import Problem
 from submission.models import Submission
+from training.models import Training
 
 
 class BaseSubmissionSerializers(serializers.ModelSerializer):
-    created_by = serializers.StringRelatedField()
-
     def validate(self, attrs):
         problem = attrs.get("problem")
 
@@ -17,10 +16,6 @@ class BaseSubmissionSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({"detail": "language does not support"})
 
         if training := attrs.get('training'):
-            training_verify_set = cache.get('training_verify_' + str(self.context.get('request').data.get('training')),
-                                            set())
-            if self.context.get('request').user.username not in training_verify_set:
-                raise serializers.ValidationError({"detail": "you do not have permission to access this training"})
             if datetime.now() > training.end_time:
                 raise serializers.ValidationError({"detail": "training has expired"})
             if datetime.now() < training.start_time:

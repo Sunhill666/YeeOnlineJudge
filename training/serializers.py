@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import make_password
 from django.core.cache import cache
+from django.db.models import Q
 from rest_framework import serializers
 
 from announcement.models import Announcement
@@ -52,25 +53,37 @@ class BaseTrainingSerializer(serializers.ModelSerializer):
 
         data.update(mode="ACM")
 
-        if groups := data.get('group') and len(groups) != 0:
-            data.update(is_open=True)
-        elif users := data.get('user') and len(users) != 0:
-            data.update(is_open=True)
-        elif data.get('password'):
-            data.update(is_open=True)
-        else:
-            data.update(is_open=False)
+        problem_id = []
+        point = []
+        if problems := data.get('problems'):
+            for problem in problems:
+                problem_id.append(problem.get('id'))
+                point.append(problem)
+            data.update(problems=problem_id)
+            data.update(point=point)
 
         return data
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        self.context.update(training=instance.id)
         serializer = ProblemListSerializer(instance=instance.problems, many=True, context=self.context)
         ann = NormalAnnouncementDetailSerializer(
-            instance=Announcement.objects.filter(training=instance.id).order_by('-created_time'),
+            instance=Announcement.objects.filter(
+                Q(visible=True) & Q(training=instance.id)
+            ).order_by('-created_time'),
             many=True
         )
-        ret.update(problems=serializer.data)
+        problems = []
+        points = ret.get('point')
+        for problem in serializer.data:
+            for point in points:
+                if point.get('id') == problem.get('id'):
+                    problem.update(point=point.get('point'))
+                    break
+            problems.append(problem)
+        ret.pop('point')
+        ret.update(problems=problems)
         ret.update(announcement=ann.data)
         return ret
 
@@ -92,7 +105,7 @@ class BaseTrainingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Training
-        fields = '__all__'
+        exclude = ['mode', 'is_open']
         read_only_fields = ['created_time', 'created_by']
 
 
@@ -137,15 +150,9 @@ class BaseContestRankSerializer(serializers.ModelSerializer):
 # 训练序列化器
 class NormalDetailTrainingSerializer(BaseTrainingSerializer):
     def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        pk = self.context.get('view').kwargs.get('pk')
-        username = self.context.get('request').user.username
-        training_verify_set = cache.get('training_verify_' + pk, set())
-        if username in training_verify_set:
-            ret.update(joined=True)
-        else:
-            ret.update(joined=False)
-        return ret
+        pk = self.context.get('training')
+        self.context.update({"training": pk})
+        return super().to_representation(instance)
 
     class Meta:
         model = Training
@@ -155,7 +162,7 @@ class NormalDetailTrainingSerializer(BaseTrainingSerializer):
 class TrainingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Training
-        exclude = ['description', 'password']
+        exclude = ['description', 'password', 'point', 'problems', 'mode']
 
 
 class NormalDetailLearningPlanSerializer(BaseLearningPlanSerializer):

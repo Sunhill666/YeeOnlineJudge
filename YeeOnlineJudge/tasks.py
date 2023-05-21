@@ -25,10 +25,10 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
         train = submit.training
         user = submit.created_by
         statistics = train.trainingrank_set.get(user=user).statistics
-        test_case_status = statistics.get(str(problem_id), {})
+        # test_case_status = statistics.get(str(problem_id), {})
     else:
         statistics = {}
-        test_case_status = {}
+        # test_case_status = {}
     # 将一道题目中的每个测试样例和提交的代码送去判题机
     time, memory = 0, 0
     for index, val in enumerate(zip(stdin_list, expected_output_list)):
@@ -55,15 +55,20 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
         # 提交的状态id大于3即为出错，对于ACM模式直接停止判题并记录提交状态。对于OI模式则继续，但不会继续更新此提交的状态
         if sub.status.get('id') > 3:
             # 之前做对不更新
-            if not test_case_status.get(index):
-                test_case_status.update({index: False})
+            # if not test_case_status.get(index):
+            #     test_case_status.update({index: False})
+            if not statistics.get(str(problem_id)) == 1:
+                statistics.update({str(problem_id): 0})
             token_list.append(sub.token)
             wrong_flag = True
         elif sub.status.get('id') == 3:
-            test_case_status.update({index: True})
+            # test_case_status.update({index: True})
+            statistics.update({str(problem_id): 1})
         else:
-            if not test_case_status.get(index):
-                test_case_status.update({index: None})
+            # if not test_case_status.get(index):
+            #     test_case_status.update({index: None})
+            if not statistics.get(index):
+                statistics.update({str(problem_id): -1})
 
         if problem.mode == 'ACM':
             submit.status = Submission.translate_status(sub.status)
@@ -75,7 +80,7 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
     submit.memory = memory
     submit.save()
 
-    statistics.update({str(problem_id): test_case_status})
+    # statistics.update({str(problem_id): test_case_status})
 
     if training:
         work = process_training.delay(submission_id, statistics)
@@ -86,7 +91,6 @@ def to_judge(code, language_id, problem_id, submission_id, training=None):
     else:
         process_statistics.delay(submission_id, "Problem")
         process_statistics.delay(submission_id, "User")
-    return submit.id, submit.status, statistics
 
 
 @shared_task
@@ -98,22 +102,30 @@ def process_statistics(submission_id, process_type, training=None):
     # 更新题目或用户数据
     if process_type == "User":
         statistics = creator_profile.statistics
-        statistics.update(Commit=Submission.objects.filter(created_by=creator_profile.user_id).count())
+        statistics.update(Commit=Submission.objects.filter(
+            Q(created_by=creator_profile.user_id) &
+            Q(training__isnull=True)
+        ).count())
         statistics.update({
             submit.status: Submission.objects.filter(
                 Q(status=submit.status) &
-                Q(created_by=creator_profile.user_id)
+                Q(created_by=creator_profile.user_id) &
+                Q(training__isnull=True)
             ).distinct("problem").count()
         })
         creator_profile.statistics = statistics
         creator_profile.save()
     elif process_type == "Problem":
         statistics = problem.statistics
-        statistics.update(Commit=Submission.objects.filter(problem_id=problem.id).count())
+        statistics.update(Commit=Submission.objects.filter(
+            Q(problem_id=problem.id) &
+            Q(training__isnull=True)
+        ).count())
         statistics.update({
             submit.status: Submission.objects.filter(
                 Q(problem_id=problem.id) &
-                Q(status=submit.status)
+                Q(status=submit.status) &
+                Q(training__isnull=True)
             ).distinct("created_by").count()
         })
         problem.statistics = statistics
@@ -135,7 +147,6 @@ def process_statistics(submission_id, process_type, training=None):
         train_rank.save()
     else:
         return "process_type 有误"
-    return {process_type: statistics}
 
 
 @shared_task
@@ -143,6 +154,7 @@ def process_training(submission_id, new_statistics):
     submit = Submission.objects.get(pk=submission_id)
     user = submit.created_by
     train = submit.training
+    points = train.point
     train_rank = train.trainingrank_set.get(user=user)
     old_statistics = train_rank.statistics
     old_statistics.update(new_statistics)
@@ -151,13 +163,16 @@ def process_training(submission_id, new_statistics):
     for key, val in old_statistics.items():
         if key == "score" or key == "statistics":
             continue
-        problem = Problem.objects.get(pk=int(key))
-        point = problem.point
-        for order, status in val.items():
-            cur_point = point[int(order)]
-            if status:
-                score += int(cur_point.get('point'))
+        # problem = Problem.objects.get(pk=int(key))
+        # point = problem.point
+        # for order, status in val.items():
+        #     cur_point = point[int(order)]
+        #     if status:
+        #         score += int(cur_point.get('point'))
+        if val == 1:
+            for point in points:
+                if point.get('id') == int(key):
+                    score += point.get('point')
     old_statistics.update(score=score)
     train_rank.statistics = old_statistics
     train_rank.save()
-    return old_statistics

@@ -1,23 +1,21 @@
 from django.db.models import Case, Count, When
-from rest_framework import status, permissions, filters, generics
+from rest_framework import status, filters, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from YeeOnlineJudge.tasks import to_judge
+from organization import permissions
 from problem.models import Problem
 from submission.models import Submission
 from submission.serializers import BaseSubmissionSerializers, SubmissionListSerializers
-from training.models import TrainingRank
+from training.models import Training, TrainingRank
 from utils.judger import submission
 from utils.pagination import NumPagination
 from utils.tools import get_languages, prase_template, default_statistics
 
 
 class SubmissionListCreateView(generics.ListCreateAPIView):
-    queryset = Submission.objects.filter(training__isnull=True).annotate(
-        sticky_top=Count(Case(When(status="Processing", then=1)))
-    ).order_by("-sticky_top", "-created_time")
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.CanSubmit]
     pagination_class = NumPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['=status', 'created_by__username', 'problem__title']
@@ -27,6 +25,12 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
         if self.request.method == "GET":
             return SubmissionListSerializers
         return BaseSubmissionSerializers
+    
+    def get_queryset(self):
+        queryset = Submission.objects.filter(training__isnull=True).annotate(
+            sticky_top=Count(Case(When(status="Processing", then=1)))
+        ).order_by("-sticky_top", "-created_time")
+        return queryset
 
     def create(self, request, *args, **kwargs):
         # 如果问题中有template存在且提交的语言为template支持的语言，则把提交的代码与template结合起来提交
@@ -42,7 +46,7 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
         else:
             ip = request.META.get('REMOTE_ADDR')
 
-        if request.data.get('stdin'):
+        if 'stdin' in request.data.keys():
             expected_output = request.data.get('expected_output')
             problem = Problem.objects.get(pk=request.data.get('problem'))
             sub = submission.submit(
@@ -72,11 +76,16 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
             try:
                 TrainingRank.objects.get(user=request.user, training_id=training)
             except TrainingRank.DoesNotExist:
+                train = Training.objects.get(pk=training)
+                inital_problem = dict()
+                for problem_id in train.problems.values_list('id', flat=True):
+                    inital_problem.update({problem_id: -1})
+                inital_problem.update({
+                    "statistics": default_statistics(),
+                    "score": 0
+                })
                 TrainingRank.objects.create(user=request.user, training_id=training,
-                                            statistics={
-                                                "statistics": default_statistics(),
-                                                "score": 0
-                                            })
+                                            statistics=inital_problem)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

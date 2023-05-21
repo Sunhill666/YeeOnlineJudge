@@ -10,7 +10,7 @@ from utils.pagination import NumPagination
 class AnnouncementListCreateView(generics.ListCreateAPIView):
     queryset = Announcement.objects.all().order_by('id')
     pagination_class = NumPagination
-    permission_classes = [permissions.IsStaff]
+    permission_classes = [permissions.IsSuperAdmin]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     ordering_fields = ['created_time']
     search_fields = ['title', 'content']
@@ -27,4 +27,4 @@ class AnnouncementListCreateView(generics.ListCreateAPIView):
 class AnnouncementRUDView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Announcement.objects.all()
     serializer_class = AnnouncementSerializer
-    permission_classes = [permissions.IsStaff]
+    permission_classes = [permissions.IsSuperAdmin]

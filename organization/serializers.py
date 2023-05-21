@@ -1,5 +1,7 @@
 import re
 
+from datetime import timedelta, date
+from django.db.models import Count, Q
 from rest_framework import serializers
 
 from submission.models import Submission
@@ -17,6 +19,16 @@ class BaseGroupsSerialize(serializers.ModelSerializer):
 
 class BaseUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, min_length=8, write_only=True, allow_blank=True)
+
+    def validate_username(self, value):
+        pattern = re.compile(r"^[0-9]{8,13}\Z")
+        match = pattern.match(value)
+        if not match:
+            raise serializers.ValidationError(
+                {"detail": f"this username '{value}' is invalid, the username may contain only numbers and length in "
+                           f"8-13"}
+            )
+        return value
 
     def create(self, validated_data):
         profile = validated_data.pop('profile')
@@ -136,6 +148,21 @@ class NormalUserSerializer(BaseUserSerializer):
         submits = Submission.objects.filter(created_by=instance, training__isnull=True).order_by('-created_time')[:10]
         submits_data = SubmissionListSerializers(instance=submits, many=True).data
         ret.update(recent_submit=submits_data)
+        finished = Submission.objects.filter(
+            Q(created_by=instance) & Q(status=Submission.Status.ACCEPTED) & Q(training__isnull=True)
+        ).distinct('problem')
+        finished_data = SubmissionListSerializers(instance=finished, many=True).data
+        finished = [i.get('problem') for i in finished_data]
+        today = date.today()
+        seven_day_before = today - timedelta(days=6)
+        week_range = [seven_day_before + timedelta(days=i) for i in range(7)]
+        week_qs = Submission.objects.filter(
+            Q(created_time__gte=seven_day_before) & Q(created_by=instance)
+        ).values('created_time__date').annotate(count=Count('id'))
+        week_submit_dict = {i['created_time__date']: i['count'] for i in week_qs}
+        week_submit = [{"date": date_t, "count": week_submit_dict.get(date_t, 0)} for date_t in week_range]
+        ret.update(week_submit=week_submit)
+        ret.update(finished=finished)
         return ret
 
     class Meta:

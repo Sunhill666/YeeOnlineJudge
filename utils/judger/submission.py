@@ -45,7 +45,7 @@ class Submission:
     memory = None
 
     _encoded_send_fields = {"source_code", "stdin", "expected_output"}
-    _encoded_response_fields = {"stderr", "stdout", "compile_output"}
+    _encoded_response_fields = {"stderr", "stdout", "compile_output", "message"}
     _encoded_fields = _encoded_send_fields | _encoded_response_fields
     _extra_send_fields = {"cpu_time_limit", "cpu_extra_time", "wall_time_limit", "memory_limit", "stack_limit",
                           "max_processes_and_or_threads", "enable_per_process_and_thread_time_limit",
