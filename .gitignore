@@ -7,3 +7,4 @@ venv
 upload/avatar/*
 !upload/avatar/default.jpg
 upload/test_case/*
+upload/pics/*
